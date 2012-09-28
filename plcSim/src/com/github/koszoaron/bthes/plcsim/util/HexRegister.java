@@ -9,19 +9,29 @@ public class HexRegister extends Register {
      */
     public HexRegister(int address) {
         super(address);
-        // TODO Auto-generated constructor stub
     }
 
     @Override
     public int getValue() {
-        // TODO Auto-generated method stub
-        return 0;
+        int res = upperByte << 8;
+        res = res | lowerByte;
+        return res;
     }
 
     @Override
     public void setValue(int value) {
-        // TODO Auto-generated method stub
-
+        if (value < 256) {
+            lowerByte = value;
+            upperByte = 0;
+        } else {
+            lowerByte = value & 0xff;
+            upperByte = value >> 8;
+        }
+    }
+    
+    @Override
+    public int getType() {
+        return Constants.REGISTER_TYPE_HEX;
     }
 
 }

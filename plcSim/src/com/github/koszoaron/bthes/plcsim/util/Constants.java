@@ -1,6 +1,10 @@
 package com.github.koszoaron.bthes.plcsim.util;
 
 public class Constants {
+    public static final int REGISTER_TYPE_HEX = 0;
+    public static final int REGISTER_TYPE_BCD = 1;
+    
+    //old constants
     public static final int CONGESTION_TOLERANCE =      100;
     public static final int CONGESTION_2ND_TOLERANCE =  100;
 

@@ -2,8 +2,8 @@ package com.github.koszoaron.bthes.plcsim.util;
 
 public abstract class Register {
 
-    protected byte upperByte = 0;
-    protected byte lowerByte = 0;
+    protected int upperByte = 0;
+    protected int lowerByte = 0;
     private int address;
     
     /**
@@ -19,6 +19,13 @@ public abstract class Register {
      * @param value An integer with the new register value
      */
     public abstract void setValue(int value);
+
+    /**
+     * Returns the type of the register
+     * 
+     * @return <code>Constants.REGISTER_TYPE_HEX</code> or <code>Constants.REGISTER_TYPE_BCD</code>
+     */
+    public abstract int getType();
     
     /**
      * An object representation of a register
@@ -34,7 +41,7 @@ public abstract class Register {
      * 
      * @return
      */
-    public byte getUpperByte() {
+    public int getUpperByte() {
         return upperByte;
     }
     
@@ -43,7 +50,7 @@ public abstract class Register {
      * 
      * @return
      */
-    public byte getLowerByte() {
+    public int getLowerByte() {
         return lowerByte;
     }
     
@@ -54,5 +61,11 @@ public abstract class Register {
      */
     public int getAddress() {
         return address;
+    }
+    
+    @Override
+    public String toString() {
+        String res = "R: " + address + ", T: " + (getType() == 0 ? "hex" : "bcd") + ", U: " + upperByte + ", L: " + lowerByte + ", V: " + getValue();
+        return res;
     }
 }

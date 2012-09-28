@@ -13,14 +13,18 @@ public class BcdRegister extends Register {
     
     @Override
     public int getValue() {
-        // TODO Auto-generated method stub
-        return 0;
+        int res = upperByte * 100 + lowerByte;
+        return res;
     }
 
     @Override
     public void setValue(int value) {
-        // TODO Auto-generated method stub
-
+        upperByte = value / 100;
+        lowerByte = value % 100;
     }
 
+    @Override
+    public int getType() {
+        return Constants.REGISTER_TYPE_BCD;
+    }
 }
