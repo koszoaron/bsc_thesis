@@ -2,4 +2,13 @@
 
     <style name="AppTheme" parent="android:Theme.Light" />
 
+    <style name="text_view_rpm" parent="android:Widget.Holo.Light.TextView">
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_marginLeft">120dp</item>
+    </style>
+    <style name="text_view_motor_speed" parent="android:Widget.Holo.Light.TextView">
+        <item name="android:gravity">right</item>
+        <item name="android:textSize">40sp</item>
+        <item name="android:typeface">monospace</item>
+    </style>
 </resources>
