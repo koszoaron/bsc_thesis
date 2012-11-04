@@ -1,4 +1,16 @@
 <resources>
     <string name="app_name">maguScada</string>
     <string name="rpm">RPM</string>
+    <string name="four_zeros">0000</string>
+    <string name="connect_to_plc">Connect to PLC</string>
+    <string name="address_">Address:</string>
+    <string name="port_">Port:</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="measurement_settings">Measurement settings</string>
+    <string name="length_mm_">Length (mm)</string>
+    <string name="diameter_mm_">Diameter (mm)</string>
+    <string name="length">Length</string>
+    <string name="diameter">Diameter</string>
+    <string name="both">Both</string>
 </resources>

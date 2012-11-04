@@ -63,7 +63,7 @@
             android:layout_alignLeft="@+id/ivMain"
             android:layout_marginBottom="75dp"
             android:layout_marginLeft="465dp"
-            android:text="4400" />
+            android:text="@string/four_zeros" />
 
         <TextView
             android:id="@+id/tvMotor1Rpm"
@@ -83,7 +83,7 @@
             android:layout_alignBottom="@+id/tvMotor1Speed"
             android:layout_alignLeft="@+id/tvMotor1Speed"
             android:layout_marginLeft="335dp"
-            android:text="2200" />
+            android:text="@string/four_zeros" />
 
         <TextView
             android:id="@+id/tvMotor2Rpm"
@@ -93,73 +93,114 @@
             android:layout_alignBaseline="@+id/tvMotor2Speed"
             android:layout_alignLeft="@+id/tvMotor2Speed"
             android:text="@string/rpm" />
+
+        <ProgressBar
+            android:id="@+id/pBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvConsole"
+            android:layout_width="300dp"
+            android:layout_height="170dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnToggleConsole"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/tvConsole"
+            android:text="Console" />
+
     </RelativeLayout>
 
-    <TableLayout
+    <LinearLayout
         android:id="@+id/tlButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:stretchColumns="0,1,2,3,4" >
+        android:orientation="vertical" >
 
-        <TableRow
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
 
             <Button
                 android:id="@+id/btnA1"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnA2"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnA3"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnA4"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnA5"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
-        </TableRow>
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
+            
+        </LinearLayout>
 
-        <TableRow
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
 
             <Button
                 android:id="@+id/btnB1"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnB2"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnB3"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnB4"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
 
             <Button
                 android:id="@+id/btnB5"
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
-        </TableRow>
-    </TableLayout>
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1.0" />
+            
+        </LinearLayout>
+        
+    </LinearLayout>
 
 </LinearLayout>
