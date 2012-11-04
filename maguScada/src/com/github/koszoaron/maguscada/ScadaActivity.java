@@ -22,6 +22,11 @@ public class ScadaActivity extends Activity {
     
     private static final int FL_FRAGMENT_HOLDER = R.id.flMainFragmentHolder;
 
+    private int imageLevel = 0;
+    private int semaphoreRed = 0;
+    private int semaphoreYellow = 0;
+    private int semaphoreGreen = 0;
+
     /* (non-Javadoc)
      * @see android.app.Activity#onCreate(android.os.Bundle)
      */
@@ -125,7 +130,7 @@ public class ScadaActivity extends Activity {
             return null;
         }
     }
-    
+
     private ScadaFragment getScadaFragment() {
         return ScadaFragment.getInstance();
     }
