@@ -2,6 +2,9 @@
 
     <style name="AppTheme" parent="android:Theme.Light" />
 
+    <color name="red">#ff0000</color>
+    <color name="white">#ffffff</color>
+    
     <style name="text_view_rpm" parent="android:Widget.Holo.Light.TextView">
         <item name="android:layout_marginBottom">4dp</item>
         <item name="android:layout_marginLeft">120dp</item>
@@ -11,4 +14,11 @@
         <item name="android:textSize">40sp</item>
         <item name="android:typeface">monospace</item>
     </style>
+    <style name="text_view_congestion" parent="android:Widget.Holo.Light.TextView">
+        <item name="android:background">@color/red</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
 </resources>

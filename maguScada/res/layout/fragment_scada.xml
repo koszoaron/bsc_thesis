@@ -99,16 +99,16 @@
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
             android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvConsole"
             android:layout_width="300dp"
             android:layout_height="170dp"
-            android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
             android:visibility="gone" />
 
         <Button
@@ -117,12 +117,82 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/tvConsole"
-            android:text="Console" />
+            android:text="@string/console" />
 
+        <TextView
+            android:id="@+id/tvCongestion1"
+            style="@style/text_view_congestion"
+            android:layout_width="500dp"
+            android:layout_height="40dp"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_marginLeft="300dp"
+            android:layout_marginTop="240dp"
+            android:text="@string/congestion"
+            android:visibility="visible" />
+        
+        <TextView
+            android:id="@+id/tvCongestion2"
+            style="@style/text_view_congestion"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_marginTop="330dp"
+            android:layout_marginLeft="960dp"
+            android:text="@string/congestion"
+            android:visibility="visible" />
+        
+        <TextView
+            android:id="@+id/tvCamera1Photo"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="600dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:text="PHOTO" />
+        
+        <TextView
+            android:id="@+id/tvCamera1Light"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/tvCamera1Photo"
+            android:layout_alignLeft="@+id/tvCamera1Photo"
+            android:layout_marginTop="20dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:text="LIGHT" />
+        
+        <TextView
+            android:id="@+id/tvCamera2Photo"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_marginTop="240dp"
+            android:layout_marginLeft="1170dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:text="PHOTO" />
+        
+        <TextView
+            android:id="@+id/tvCamera2Light"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/tvCamera2Photo"
+            android:layout_alignLeft="@+id/tvCamera2Photo"
+            android:layout_marginTop="20dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:text="LIGHT" />
+        
     </RelativeLayout>
 
     <LinearLayout
-        android:id="@+id/tlButtons"
+        android:id="@+id/llButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
@@ -161,7 +231,6 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1.0" />
-            
         </LinearLayout>
 
         <LinearLayout
@@ -198,9 +267,7 @@
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1.0" />
-            
         </LinearLayout>
-        
     </LinearLayout>
 
 </LinearLayout>

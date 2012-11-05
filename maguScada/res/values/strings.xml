@@ -13,4 +13,6 @@
     <string name="length">Length</string>
     <string name="diameter">Diameter</string>
     <string name="both">Both</string>
+    <string name="console">Console</string>
+    <string name="congestion">CONGESTION</string>
 </resources>

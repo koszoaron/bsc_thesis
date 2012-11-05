@@ -28,6 +28,8 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     
     private TextView tvMotor1Speed;
     private TextView tvMotor2Speed;
+    private TextView tvCongestion1;
+    private TextView tvCongestion2;
     
     private Button btnA1;
     private Button btnA2;
@@ -83,6 +85,14 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         }
     };
     
+    private Runnable flashCongestion1Sign = new Runnable() {
+        
+        @Override
+        public void run() {
+            
+        }
+    };
+    
     public ScadaFragment() {}
     
     public static ScadaFragment getInstance() {
@@ -113,6 +123,8 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         
         tvMotor1Speed = (TextView)v.findViewById(R.id.tvMotor1Speed);
         tvMotor2Speed = (TextView)v.findViewById(R.id.tvMotor2Speed);
+        tvCongestion1 = (TextView)v.findViewById(R.id.tvCongestion1);
+        tvCongestion2 = (TextView)v.findViewById(R.id.tvCongestion2);
         
         btnA1 = (Button)v.findViewById(R.id.btnA1);
         btnA2 = (Button)v.findViewById(R.id.btnA2);
