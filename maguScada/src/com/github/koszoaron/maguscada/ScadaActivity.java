@@ -11,6 +11,10 @@ import com.github.koszoaron.maguscada.util.Constants;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreLight;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreState;
+import com.github.koszoaron.maguscada.util.PlcConstants.Lights;
+import com.github.koszoaron.maguscada.util.PlcConstants.Mode;
+import com.github.koszoaron.maguscada.util.PlcConstants.Register;
+import com.github.koszoaron.maguscada.util.StatusBits;
 
 import android.app.FragmentTransaction;
 import android.os.Bundle;
@@ -26,7 +30,7 @@ public class ScadaActivity extends Activity {
     private boolean cleaning = false;
     
     private static final int FL_FRAGMENT_HOLDER = R.id.flMainFragmentHolder;
-    private FinsConnection plcConnection;
+    private PlcConnection connection;
 
     private int imageLevel = 0;
     private int semaphoreRed = 0;
@@ -40,6 +44,8 @@ public class ScadaActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        
+        //TODO uml diagram
         
         showFragment(Constants.SCADA_FRAGMENT);
         showDialog(Constants.CONNECT_DIALOG_FRAGMENT);
@@ -91,15 +97,30 @@ public class ScadaActivity extends Activity {
     
     public void establishConnection(String address, int port) {
         dlog.r("connect to " + address + ":" + port);
-        plcConnection = FinsConnection.newInstance(address, port);
-        plcConnection.setTesting(true);
-        plcConnection.connect();
+        
+        connection = new PlcConnection(address, port);
+        
+        new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                connection.connect();
+            }
+        }).start();
+        
     }
     
-    public void beginMeasurement(MeasureSetting what, int tubeLenght, int tubeDiameter) {
+    public void beginMeasurement(final MeasureSetting what, final int tubeLenght, final int tubeDiameter) {
         dlog.r("begin measurement: " + what + "; " + tubeLenght + "; " + tubeDiameter);
-        FinsMessage setMode = new FinsMessage(0xb2, 0x01, new int[] {0x00, 0x03});  //1|2 - meas. both
-        plcConnection.sendFinsMessage(setMode);
+        
+        new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                connection.measurementStart(what, tubeLenght, tubeDiameter);
+            }
+        }).start();
+        
         
         setMeasuring(true);
         getScadaFragment().toggleMeasurementLabel();
@@ -107,17 +128,27 @@ public class ScadaActivity extends Activity {
     
     public void endMeasurement() {
         dlog.r("end measurement");
-        FinsMessage setMode = new FinsMessage(0xb2, 0x01, new int[] {0x00, 0x40});  //64 - empty
-        plcConnection.sendFinsMessage(setMode);
         
+        connection.measurementStop();
         setMeasuring(false);
         getScadaFragment().toggleMeasurementLabel();
     }
     
     public void reset() {
         dlog.r("reset");
-        FinsMessage setMode = new FinsMessage(0xb2, 0x01, new int[] {0x00, 0x20});  //32 - reset
-        plcConnection.sendFinsMessage(setMode);
+        
+        new Thread(new Runnable() {    
+            @Override
+            public void run() {
+//                boolean res = connection.reset()
+                
+                int res = connection.getStatus();                
+                dlog.v("result: " + res);
+                
+                StatusBits sb = new StatusBits(res);
+                dlog.v(sb.toString());
+            }
+        }).start();
         
         getScadaFragment().setSemaphoreState(SemaphoreLight.RED, SemaphoreState.OFF);
         getScadaFragment().setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);

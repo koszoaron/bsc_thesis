@@ -194,6 +194,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);
             setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.OFF);
         } else if (v == btnB1) {  //reset
+            getMainActivity().reset();
             
             setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.ON);
         } else if (v == btnB2) {  //track up/down

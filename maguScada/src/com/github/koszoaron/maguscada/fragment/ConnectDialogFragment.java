@@ -44,6 +44,9 @@ public class ConnectDialogFragment extends BaseDialogFragment implements OnClick
         btnOk.setOnClickListener(this);
         btnCancel.setOnClickListener(this);
         
+        etAddress.setText("192.168.1.103");
+        etPort.setText("9600");
+        
         return v;
     }
 
