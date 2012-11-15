@@ -5,6 +5,35 @@ public class PlcConstants {
     public static final int CONGESTION_TOLERANCE = 100;
     public static final int CONGESTION_TOLERANCE_2ND = 100;
     
+    public static final int CALIBRATION_SAMPLE_DIAMETER = 55;
+    public static final int CALIBRATION_SAMPLE_INSERTION = 63;
+    public static final int SERVO_MIN_POSITION = 10;
+    public static final int SERVO_MAX_POSITION = 60;
+    public static final int SERVO_NULL_POSITION = 71;
+    public static final int TRACK_LENGTH = 557;
+    public static final int EXPOSITION_LENGTH = 920;
+    public static final int CONGESTION1_SENSING_LENGTH = 2075;
+    public static final int CONGESTION2_SENSING_LENGTH = 60;
+//    public static final int CONGESTION2_SENSING_DISTANCE = 230;
+    public static final int SENSOR_DISTANCE = 180;
+    public static final int FRONT_BLOWER_ON = 50;
+    public static final int FRONT_BLOWER_OFF = 50;
+    public static final int REAR_BLOWER_ON = 75;
+    public static final int FREQUENCY_TO_CMPERSEC_RATIO = 88;
+    public static final int TRACK_SPEED = 50;
+    public static final int SLOW_TRACK_SPEED = 50;
+    public static final int DIAMETER_LED_DELAY = 50;
+    public static final int SENSOR_CURTAIN_TOLERANCE = 2000;
+    public static final int LIGHTING_CYCLE_TIME = 145;
+    public static final int REAR_BLOWER_RUNNING_TIME = 500;
+    public static final int SHUTDOWN_DELAY_SECS = 2;
+    public static final int NORMAL_ITERATIONS = 20;
+    public static final int NORMAL_SLEEP_TIME = 1000;
+    public static final int SHORT_ITERATIONS = 30;
+    public static final int SHORT_SLEEP_TIME = 500;
+    public static final int LONG_ITERATIONS = 60;
+    public static final int LONG_SLEEP_TIME = 2000;
+    
     /**
      * Directions in which the track can go.
      */
@@ -74,7 +103,7 @@ public class PlcConstants {
         FREQCHANGER1 (0x64),
         /** Frequency of the second motor [0.01 Hz] */
         FREQCHANGER2 (0x78),
-        /** Time shift for the diameter exponating sensor [10 ms] */
+        /** Time shift for the diameter exposing sensor [10 ms] */
         SENSOR_RELOCATION (0x82);
         
         private int value;
@@ -95,6 +124,8 @@ public class PlcConstants {
         LENGTH (1),
         /** The lights for diameter measurement are enabled */
         DIAMETER (6),
+        /** Both lights for length and diameter measurement are enabled */
+        BOTH (7),
         /** The lights for calibration are enabled */
         CALIBRATION (8);
         
@@ -132,11 +163,11 @@ public class PlcConstants {
         CLARITY_CHECKING (128),
         /** Set the cylinder distance */
         DIAMETER_SETTING (256),
-        /** Exponate the top camera */
+        /** Expose the top camera */
         LENGTH_EXPOSITION (512),
-        /** Exponate the front camera */
+        /** Expose the front camera */
         DIAMETER_EXPOSITION (1024),
-        /** Exponate the top camera with the calibration lights */
+        /** Expose the top camera with the calibration lights */
         EXPOSITION_WITH_CALIBRATION_LIGHTS (2048),
         /** Enable the warning light */
         YELLOW_LIGHT_ENABLE (4096),
@@ -187,7 +218,7 @@ public class PlcConstants {
         CALIBRATION_ARM_D_DOWN (2048),
         /** The calibration sample for the front camera is raised */
         CALIBRATION_ARM_D_UP (4096),
-        /** The sensor exponating the front camera is triggered */
+        /** The sensor exposing the front camera is triggered */
         EXPOSITION_SENSOR_TRIGGERED (8192),
         /** The service doors are open */
         SERVICE_DOOR_OPEN (16384);
