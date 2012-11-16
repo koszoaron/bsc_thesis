@@ -14,11 +14,16 @@
         <item name="android:textSize">40sp</item>
         <item name="android:typeface">monospace</item>
     </style>
-    <style name="text_view_congestion" parent="android:Widget.Holo.Light.TextView">
+    <style name="text_view_problem" parent="android:Widget.Holo.Light.TextView">
         <item name="android:background">@color/red</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">30sp</item>
         <item name="android:textStyle">bold</item>
     </style>
     
+    <style name="text_view_camera_activity" parent="android:Widget.Holo.Light.TextView">
+        <item name="android:textColor">#00ff00</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

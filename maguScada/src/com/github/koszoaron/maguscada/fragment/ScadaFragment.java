@@ -20,6 +20,9 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     private static Logger dlog = new Logger(ScadaFragment.class.getSimpleName());
     private static Handler handler = new Handler();
     private static ScadaFragment INSTANCE = null;
+    
+    private static final int FLASH_SHOW_TIME = 1500;
+    private static final int FLASH_HIDE_TIME = 1000;
 
     private ImageView ivMain;
     private ImageView ivSemaphoreRed;
@@ -30,6 +33,14 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     private TextView tvMotor2Speed;
     private TextView tvCongestion1;
     private TextView tvCongestion2;
+    private TextView tvServoProblem;
+    private TextView tvNoPressure;
+    private TextView tvServiceDoorOpen;
+    private TextView tvCamera1Active;
+    private TextView tvCamera2Active;
+    
+    private TextView tvConsole;
+    private Button btnConsole;
     
     private Button btnA1;
     private Button btnA2;
@@ -85,13 +96,75 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         }
     };
     
-    private Runnable flashCongestion1Sign = new Runnable() {
+    private Runnable flashCongestion1SignTask = new Runnable() {
         
         @Override
         public void run() {
-            
+            if (tvCongestion1.getVisibility() == View.VISIBLE) {
+                tvCongestion1.setVisibility(View.GONE);
+                handler.postDelayed(this, FLASH_HIDE_TIME);
+            } else if (tvCongestion1.getVisibility() == View.GONE) {
+                tvCongestion1.setVisibility(View.VISIBLE);
+                handler.postDelayed(this, FLASH_SHOW_TIME);
+            }
         }
     };
+    
+    private Runnable flashCongestion2SignTask = new Runnable() {
+        
+        @Override
+        public void run() {
+            if (tvCongestion2.getVisibility() == View.VISIBLE) {
+                tvCongestion2.setVisibility(View.GONE);
+                handler.postDelayed(this, FLASH_HIDE_TIME);
+            } else if (tvCongestion2.getVisibility() == View.GONE) {
+                tvCongestion2.setVisibility(View.VISIBLE);
+                handler.postDelayed(this, FLASH_SHOW_TIME);
+            }
+        }
+    };
+    
+    private Runnable flashServoProblemSignTask = new Runnable() {
+        
+        @Override
+        public void run() {
+            if (tvServoProblem.getVisibility() == View.VISIBLE) {
+                tvServoProblem.setVisibility(View.GONE);
+                handler.postDelayed(this, FLASH_HIDE_TIME);
+            } else if (tvServoProblem.getVisibility() == View.GONE) {
+                tvServoProblem.setVisibility(View.VISIBLE);
+                handler.postDelayed(this, FLASH_SHOW_TIME);
+            }
+        }
+    };
+    
+    private Runnable flashNoPressureSignTask = new Runnable() {
+        
+        @Override
+        public void run() {
+            if (tvNoPressure.getVisibility() == View.VISIBLE) {
+                tvNoPressure.setVisibility(View.GONE);
+                handler.postDelayed(this, FLASH_HIDE_TIME);
+            } else if (tvNoPressure.getVisibility() == View.GONE) {
+                tvNoPressure.setVisibility(View.VISIBLE);
+                handler.postDelayed(this, FLASH_SHOW_TIME);
+            }
+        }
+    };
+    
+    private Runnable flashServiceDoorOpenTask = new Runnable() {
+        
+        @Override
+        public void run() {
+            if (tvServiceDoorOpen.getVisibility() == View.VISIBLE) {
+                tvServiceDoorOpen.setVisibility(View.GONE);
+                handler.postDelayed(this, FLASH_HIDE_TIME);
+            } else if (tvServiceDoorOpen.getVisibility() == View.GONE) {
+                tvServiceDoorOpen.setVisibility(View.VISIBLE);
+                handler.postDelayed(this, FLASH_SHOW_TIME);
+            }
+        }
+    };  
     
     public ScadaFragment() {}
     
@@ -125,6 +198,15 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         tvMotor2Speed = (TextView)v.findViewById(R.id.tvMotor2Speed);
         tvCongestion1 = (TextView)v.findViewById(R.id.tvCongestion1);
         tvCongestion2 = (TextView)v.findViewById(R.id.tvCongestion2);
+        tvServoProblem = (TextView)v.findViewById(R.id.tvServoProblem);
+        tvNoPressure = (TextView)v.findViewById(R.id.tvNoPressure);
+        tvServiceDoorOpen = (TextView)v.findViewById(R.id.tvServiceDoorOpen);
+        tvCamera1Active = (TextView)v.findViewById(R.id.tvCamera1Active);
+        tvCamera2Active = (TextView)v.findViewById(R.id.tvCamera2Active);
+        
+        tvConsole = (TextView)v.findViewById(R.id.tvConsole);
+        btnConsole = (Button)v.findViewById(R.id.btnToggleConsole);
+        btnConsole.setOnClickListener(this);
         
         btnA1 = (Button)v.findViewById(R.id.btnA1);
         btnA2 = (Button)v.findViewById(R.id.btnA2);
@@ -162,6 +244,9 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         setMotorSpeedDisplay(Motor.MOTOR1, 100);
         setMotorSpeedDisplay(Motor.MOTOR2, 1234);
         
+        setCamera1ActiveStatus(true);
+        setCamera2ActiveStatus(true);
+                        
         return v;
     }
 
@@ -206,9 +291,17 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         } else if (v == btnB4) {  //photo front
             //TODO sendMessage.. photo
             //TODO cam anim
+            logToConsole("photo front");
         } else if (v == btnB5) {  //shutdown
             //TODO dialog
             //TODO if yes then sendmessage... and finish()
+            logToConsole("shutdown");
+        } else if (v == btnConsole) {
+            if (tvConsole.getVisibility() == View.VISIBLE) {
+                tvConsole.setVisibility(View.GONE);
+            } else if (tvConsole.getVisibility() == View.GONE) {
+                tvConsole.setVisibility(View.VISIBLE);
+            }
         }
     }
     
@@ -278,5 +371,64 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         } else {
             btnA1.setText("Measurement");
         }
+    }
+    
+    public void setCongestion1Status(boolean enabled) {
+        handler.removeCallbacks(flashCongestion1SignTask);
+        if (enabled) {
+            handler.post(flashCongestion1SignTask);
+        }
+    }
+    
+    public void setCongestion2Status(boolean enabled) {
+        handler.removeCallbacks(flashCongestion2SignTask);
+        if (enabled) {
+            handler.post(flashCongestion2SignTask);
+        }
+    }
+    
+    public void setServoProblemStatus(boolean enabled) {
+        handler.removeCallbacks(flashServoProblemSignTask);
+        if (enabled) {
+            handler.post(flashServoProblemSignTask);
+        }
+    }
+    
+    public void setNoPressureStatus(boolean enabled) {
+        handler.removeCallbacks(flashNoPressureSignTask);
+        if (enabled) {
+            handler.post(flashNoPressureSignTask);
+        }
+    }
+    
+    public void setServiceDoorOpenStatus(boolean enabled) {
+        handler.removeCallbacks(flashServiceDoorOpenTask);
+        if (enabled) {
+            handler.post(flashServiceDoorOpenTask);
+        }
+    }
+    
+    public void setCamera1ActiveStatus(boolean enabled) {
+        if (enabled) {
+            tvCamera1Active.setVisibility(View.VISIBLE);
+        } else {
+            tvCamera1Active.setVisibility(View.GONE);
+        }
+    }
+    
+    public void setCamera2ActiveStatus(boolean enabled) {
+        if (enabled) {
+            tvCamera2Active.setVisibility(View.VISIBLE);
+        } else {
+            tvCamera2Active.setVisibility(View.GONE);
+        }
+    }
+    
+    private void logToConsole(String text) {
+        dlog.r(text);
+        if (tvConsole.getText() != null && !tvConsole.getText().equals("")) {
+            tvConsole.append("\n");
+        }
+        tvConsole.append(text);
     }
 }

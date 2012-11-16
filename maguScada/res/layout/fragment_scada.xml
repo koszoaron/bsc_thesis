@@ -105,10 +105,16 @@
 
         <TextView
             android:id="@+id/tvConsole"
-            android:layout_width="300dp"
+            android:layout_width="400dp"
             android:layout_height="170dp"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
+            android:background="#80000000"
+            android:gravity="bottom|left"
+            android:maxLines="10"
+            android:paddingBottom="2dp"
+            android:paddingLeft="2dp"
+            android:textColor="#ffffff"
             android:visibility="gone" />
 
         <Button
@@ -121,7 +127,7 @@
 
         <TextView
             android:id="@+id/tvCongestion1"
-            style="@style/text_view_congestion"
+            style="@style/text_view_problem"
             android:layout_width="500dp"
             android:layout_height="40dp"
             android:layout_alignLeft="@+id/ivMain"
@@ -129,66 +135,82 @@
             android:layout_marginLeft="300dp"
             android:layout_marginTop="240dp"
             android:text="@string/congestion"
-            android:visibility="visible" />
-        
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/tvCongestion2"
-            style="@style/text_view_congestion"
+            style="@style/text_view_problem"
             android:layout_width="200dp"
             android:layout_height="40dp"
             android:layout_alignLeft="@+id/ivMain"
             android:layout_alignTop="@+id/ivMain"
-            android:layout_marginTop="330dp"
             android:layout_marginLeft="960dp"
+            android:layout_marginTop="330dp"
             android:text="@string/congestion"
-            android:visibility="visible" />
-        
+            android:visibility="gone" />
+
         <TextView
-            android:id="@+id/tvCamera1Photo"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/ivMain"
+            android:id="@+id/tvNoPressure"
+            style="@style/text_view_problem"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_alignBottom="@+id/ivMain"
             android:layout_alignLeft="@+id/ivMain"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="600dp"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:text="PHOTO" />
-        
+            android:layout_marginBottom="230dp"
+            android:layout_marginLeft="810dp"
+            android:text="@string/no_pressure"
+            android:visibility="gone" />
+
         <TextView
-            android:id="@+id/tvCamera1Light"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/tvCamera1Photo"
-            android:layout_alignLeft="@+id/tvCamera1Photo"
-            android:layout_marginTop="20dp"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:text="LIGHT" />
-        
-        <TextView
-            android:id="@+id/tvCamera2Photo"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/ivMain"
+            android:id="@+id/tvServoProblem"
+            style="@style/text_view_problem"
+            android:layout_width="250dp"
+            android:layout_height="40dp"
             android:layout_alignLeft="@+id/ivMain"
-            android:layout_marginTop="240dp"
-            android:layout_marginLeft="1170dp"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:text="PHOTO" />
-        
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_marginLeft="810dp"
+            android:layout_marginTop="170dp"
+            android:text="@string/servo_problem"
+            android:visibility="gone" />
+
         <TextView
-            android:id="@+id/tvCamera2Light"
-            android:layout_width="100dp"
+            android:id="@+id/tvServiceDoorOpen"
+            style="@style/text_view_problem"
+            android:layout_width="300dp"
+            android:layout_height="40dp"
+            android:layout_alignBottom="@+id/ivMain"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="400dp"
+            android:text="@string/service_door_open"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvCamera1Active"
+            style="@style/text_view_camera_activity"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/tvCamera2Photo"
-            android:layout_alignLeft="@+id/tvCamera2Photo"
-            android:layout_marginTop="20dp"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:text="LIGHT" />
-        
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_marginLeft="560dp"
+            android:layout_marginTop="15dp"
+            android:text="@string/on"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvCamera2Active"
+            style="@style/text_view_camera_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/ivMain"
+            android:layout_alignTop="@+id/ivMain"
+            android:layout_marginLeft="1117dp"
+            android:layout_marginTop="246dp"
+            android:text="@string/on"
+            android:visibility="gone" />
+
+        <!-- TODO: 'was lit' indicator -->
+
     </RelativeLayout>
 
     <LinearLayout

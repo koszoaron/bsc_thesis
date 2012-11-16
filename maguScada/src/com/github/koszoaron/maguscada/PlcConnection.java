@@ -25,7 +25,7 @@ public class PlcConnection {
     
     public PlcConnection(String address, int port) {
         connection = FinsConnection.newInstance(address, port);
-        connection.setTesting(false);
+        connection.setTesting(true);
     }
 
     public boolean connect() {

@@ -15,4 +15,8 @@
     <string name="both">Both</string>
     <string name="console">Console</string>
     <string name="congestion">CONGESTION</string>
+    <string name="servo_problem">SERVO PROBLEM</string>
+    <string name="no_pressure">NO PRESSURE</string>
+    <string name="service_door_open">SERVICE DOOR OPEN</string>
+    <string name="on">ON</string>
 </resources>
