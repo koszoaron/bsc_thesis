@@ -19,6 +19,7 @@ import com.github.koszoaron.maguscada.util.PlcConstants.TrackDirection;
 public class PlcConnection {
     
     private static final int MEMORY_AREA_B2 = 0xb2;
+    private static Logger dlog = new Logger(PlcConnection.class.getSimpleName());
     
     private FinsConnection connection;
     private int previousModeWord = Mode.OFF.getValue();
@@ -32,6 +33,7 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection != null && !connection.isConnected()) {
+            dlog.d("connect");
             res = connection.connect();
         }
         
@@ -42,6 +44,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
+            dlog.d("disconnect");
+            
             res = connection.disconnect();
         }
         
@@ -331,6 +335,8 @@ public class PlcConnection {
     public boolean reconnect() {
         boolean res = false;
         
+        dlog.d("reconnect");
+        
         disconnect();
         
         res = connect();
@@ -342,6 +348,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
+            dlog.d("setDelay " + delayRegister.name() + "(" + delayRegister.getValue() + "): " + delay);
+            
             res = connection.writeBcdRegister(MEMORY_AREA_B2, delayRegister.getValue(), new int[] {delay});
         }
         
@@ -352,6 +360,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
+            dlog.d("setFrequencies: " + trackFrequency + ", " + cylinderFrequency);
+            
             TrackDirection trackDir = (trackFrequency > 0 ? TrackDirection.FORWARD : TrackDirection.STOP);
             boolean r1 = connection.writeRegister(MEMORY_AREA_B2, Register.FREQCHANGER1.getValue(), new int[] {trackDir.getValue(), trackFrequency});
                     
@@ -368,6 +378,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
+            dlog.d("setCylinderDistance: " + distance);
+            
             boolean r1 = connection.writeRegister(MEMORY_AREA_B2, Register.CYLINDER_DISTANCE.getValue(), new int[] {distance});
             boolean r2 = setMode(Mode.DIAMETER_SETTING);
             
@@ -380,7 +392,9 @@ public class PlcConnection {
     private boolean setCylinderDistanceWithoutModeChanging(int distance) {
         boolean res = false;
         
-        if (connection.isConnected()) { 
+        if (connection.isConnected()) {
+            dlog.d("setCylinderDistanceWithoutModeChanging: " + distance);
+            
             res = connection.writeRegister(MEMORY_AREA_B2, Register.CYLINDER_DISTANCE.getValue(), new int[] {distance});
         }
         
@@ -391,6 +405,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) { 
+            dlog.d("setServoNullPosition: " + position);
+            
             res = connection.writeRegister(MEMORY_AREA_B2, Register.SERVO_NULL_POSITION.getValue(), new int[] {position});
         }
         
@@ -400,7 +416,9 @@ public class PlcConnection {
     private boolean setLights(Lights l) {
         boolean res = false;
         
-        if (connection.isConnected()) { 
+        if (connection.isConnected()) {
+            dlog.d("setLights: " + l.getValue());
+            
             res = connection.writeRegister(MEMORY_AREA_B2, Register.LIGHTS.getValue(), new int[] {l.getValue()});
         }
         
@@ -424,6 +442,8 @@ public class PlcConnection {
             } else {
                 previousModeWord = modeWord;
             }
+            
+            dlog.d("setMode: " + modeWord);
             
             res = connection.writeRegister(MEMORY_AREA_B2, Register.MODE.getValue(), new int[] {modeWord});
         }

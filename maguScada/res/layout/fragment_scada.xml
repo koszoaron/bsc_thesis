@@ -52,6 +52,7 @@
                 android:background="@android:color/black"
                 android:padding="5dp"
                 android:src="@drawable/semaphore_green" />
+            
         </LinearLayout>
 
         <TextView

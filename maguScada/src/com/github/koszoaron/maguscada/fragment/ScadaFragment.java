@@ -1,5 +1,7 @@
 package com.github.koszoaron.maguscada.fragment;
 
+import java.util.LinkedList;
+import java.util.List;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -8,6 +10,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.github.koszoaron.maguscada.Logger;
 import com.github.koszoaron.maguscada.R;
@@ -38,10 +41,12 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     private TextView tvServiceDoorOpen;
     private TextView tvCamera1Active;
     private TextView tvCamera2Active;
+    private ProgressBar pbProgress;
     
     private TextView tvConsole;
     private Button btnConsole;
     
+    private List<Button> functionButtonsList;
     private Button btnA1;
     private Button btnA2;
     private Button btnA3;
@@ -203,6 +208,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         tvServiceDoorOpen = (TextView)v.findViewById(R.id.tvServiceDoorOpen);
         tvCamera1Active = (TextView)v.findViewById(R.id.tvCamera1Active);
         tvCamera2Active = (TextView)v.findViewById(R.id.tvCamera2Active);
+        pbProgress = (ProgressBar)v.findViewById(R.id.pBar);
         
         tvConsole = (TextView)v.findViewById(R.id.tvConsole);
         btnConsole = (Button)v.findViewById(R.id.btnToggleConsole);
@@ -219,16 +225,21 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         btnB4 = (Button)v.findViewById(R.id.btnB4);
         btnB5 = (Button)v.findViewById(R.id.btnB5);
         
-        btnA1.setOnClickListener(this);
-        btnA2.setOnClickListener(this);
-        btnA3.setOnClickListener(this);
-        btnA4.setOnClickListener(this);
-        btnA5.setOnClickListener(this);
-        btnB1.setOnClickListener(this);
-        btnB2.setOnClickListener(this);
-        btnB3.setOnClickListener(this);
-        btnB4.setOnClickListener(this);
-        btnB5.setOnClickListener(this);
+        functionButtonsList = new LinkedList<Button>();
+        functionButtonsList.add(btnA1);
+        functionButtonsList.add(btnA2);
+        functionButtonsList.add(btnA3);
+        functionButtonsList.add(btnA4);
+        functionButtonsList.add(btnA5);
+        functionButtonsList.add(btnB1);
+        functionButtonsList.add(btnB2);
+        functionButtonsList.add(btnB3);
+        functionButtonsList.add(btnB4);
+        functionButtonsList.add(btnB5);
+        
+        for (Button b : functionButtonsList) {
+            b.setOnClickListener(this);
+        }
         
         btnA1.setText("Measurement");
         btnA2.setText("Cleaning");
@@ -243,10 +254,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         
         setMotorSpeedDisplay(Motor.MOTOR1, 100);
         setMotorSpeedDisplay(Motor.MOTOR2, 1234);
-        
-        setCamera1ActiveStatus(true);
-        setCamera2ActiveStatus(true);
-                        
+                                
         return v;
     }
 
@@ -294,8 +302,8 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             logToConsole("photo front");
         } else if (v == btnB5) {  //shutdown
             //TODO dialog
-            //TODO if yes then sendmessage... and finish()
             logToConsole("shutdown");
+            getMainActivity().shutdown();
         } else if (v == btnConsole) {
             if (tvConsole.getVisibility() == View.VISIBLE) {
                 tvConsole.setVisibility(View.GONE);
@@ -421,6 +429,24 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             tvCamera2Active.setVisibility(View.VISIBLE);
         } else {
             tvCamera2Active.setVisibility(View.GONE);
+        }
+    }
+    
+    public void setProgressBarStatus(boolean enabled) {
+        if (enabled) {
+            pbProgress.setVisibility(View.VISIBLE);
+        } else {
+            pbProgress.setVisibility(View.GONE);
+        }
+    }
+    
+    public void setButtonsStatus(boolean enabled, boolean emergencyStopEnabled) {
+        for (Button btn : functionButtonsList) {
+            btn.setEnabled(enabled);
+        }
+        
+        if (!enabled && emergencyStopEnabled) {
+            btnA5.setEnabled(true);
         }
     }
     
