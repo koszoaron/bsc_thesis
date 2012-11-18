@@ -298,10 +298,18 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             //TODO sendMessage.. track
             toggleTrackUpDownDisplay();
         } else if (v == btnB3) {  //photo up
-            getMainActivity().photoTop();
+            if (getMainActivity().isCalibrating()) {
+                getMainActivity().calibrateTop();
+            } else {
+                getMainActivity().photoTop();
+            }
             topCameraAnimation();
         } else if (v == btnB4) {  //photo front
-            getMainActivity().photoFront();
+            if (getMainActivity().isCalibrating()) {
+                getMainActivity().calibrateFront();
+            } else {
+                getMainActivity().photoFront();
+            }
             frontCameraAnimation();
         } else if (v == btnB5) {  //shutdown
             YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.SHUTDOWN_DIALOG_FRAGMENT, "Do you want to shut down?");
@@ -375,24 +383,24 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         ivMain.setImageLevel(trackImageLevel);
     }
     
-    public void toggleMeasurementLabel() {
-        if (getMainActivity().isMeasuring()) {
+    public void toggleMeasurementLabel(boolean enable) {
+        if (enable) {
             btnA1.setText("Stop\nMeasurement");
         } else {
             btnA1.setText("Measurement");
         }
     }
     
-    public void toggleCleaningLabel() {
-        if (getMainActivity().isCleaning()) {
+    public void toggleCleaningLabel(boolean enable) {
+        if (enable) {
             btnA2.setText("Stop\nCleaning");
         } else {
             btnA2.setText("Cleaning");
         }
     }
     
-    public void toggleCalibrationLabel() {
-        if (getMainActivity().isCalibrating()) {
+    public void toggleCalibrationLabel(boolean enable) {
+        if (enable) {
             btnA3.setText("Stop\nCalibration");
         } else {
             btnA3.setText("Calibration");
@@ -466,6 +474,33 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         if (!enabled && emergencyStopEnabled) {
             btnA5.setEnabled(true);
         }
+    }
+    
+    public void setButtonsForMeasurement() {
+        setButtonsStatus(false, true);
+        btnA1.setEnabled(true);
+        btnB2.setEnabled(true);
+    }
+    
+    public void setButtonsForCleaning() {
+        setButtonsStatus(false, true);
+        btnA2.setEnabled(true);
+        btnB3.setEnabled(true);
+        btnB4.setEnabled(true);
+    }
+    
+    public void setButtonsForCalibration() {
+        setButtonsStatus(false, true);
+        btnA3.setEnabled(true);
+        btnB3.setEnabled(true);
+        btnB4.setEnabled(true);
+        btnB3.setText("Calibrate Top\nCamera");
+        btnB4.setText("Calibrate Front\nCamera");
+    }
+    
+    public void resetPhotoButtonsLabel() {
+        btnB3.setText("Photo: Top");
+        btnB4.setText("Photo: Front");
     }
     
     public void logToConsole(String text) {

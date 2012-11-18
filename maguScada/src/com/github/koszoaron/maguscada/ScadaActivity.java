@@ -97,9 +97,9 @@ public class ScadaActivity extends Activity {
         dlog.v("begin measurement: " + what + "; " + tubeLenght + "; " + tubeDiameter);
         
         new StartMeasurementTask().execute(what, tubeLenght, tubeDiameter);
-        
+        getScadaFragment().logToConsole("Start measurement: " + what + " (" + tubeLenght + "x" + tubeDiameter + ")");
         setMeasuring();
-        getScadaFragment().toggleMeasurementLabel();
+        getScadaFragment().toggleMeasurementLabel(true);
         if (what == MeasureSetting.BOTH) {
             getScadaFragment().setCamera1ActiveStatus(true);
             getScadaFragment().setCamera2ActiveStatus(true);
@@ -111,12 +111,11 @@ public class ScadaActivity extends Activity {
     }
     
     public void reset() {
-        dlog.v("reset");
-
         this.measuring = false;
         this.calibrating = false;
         this.cleaning = false;
         
+        getScadaFragment().logToConsole("Reset");
         new ResetTask().execute();
     }
     
@@ -128,6 +127,16 @@ public class ScadaActivity extends Activity {
     public void photoFront() {
         getScadaFragment().logToConsole("Photo: front");
         new ExposeFrontCameraTask().execute();
+    }
+    
+    public void calibrateTop() {
+        getScadaFragment().logToConsole("Calibrate: top");
+        new CalibrateTopCameraTask().execute();
+    }
+    
+    public void calibrateFront() {
+        getScadaFragment().logToConsole("Calibrate: front");
+        new CalibrateFrontCameraTask().execute();
     }
     
     public boolean isMeasuring() {
@@ -162,7 +171,7 @@ public class ScadaActivity extends Activity {
     
     public void onPositiveDialogAction(String tag) {
         if (tag.equals(Constants.SHUTDOWN_DIALOG_FRAGMENT)) {
-            getScadaFragment().logToConsole("Shutdown.");
+            getScadaFragment().logToConsole("Shutdown");
             new ShutdownTask().execute();
         } else if (tag.equals(Constants.FINISH_MEASUREMENT_DIALOG_FRAGMENT)) {
             getScadaFragment().logToConsole("Finish measurement");
@@ -186,8 +195,6 @@ public class ScadaActivity extends Activity {
         if (tag.equals(Constants.CLEANING_DIALOG_FRAGMENT)) {
             getScadaFragment().logToConsole("Check cleanliness...");
             new CheckCleanlinessTask().execute();
-        } else {
-            //...
         }
     }
 
@@ -225,8 +232,12 @@ public class ScadaActivity extends Activity {
         
         @Override
         protected void onPostExecute(Boolean result) {
-            //TODO if result is false then warn
-            onTaskPostExecute();
+            if (result) {
+                onTaskPostExecute();
+            } else {
+                //TODO error dialog
+                //disconnect ?
+            }
         }
     }
     
@@ -249,13 +260,22 @@ public class ScadaActivity extends Activity {
         }
     }
     
-    private class StartMeasurementTask extends GenericAsyncTask {
+    private class StartMeasurementTask extends GenericAsyncTask {       
         @Override
         protected Boolean doInBackground(Object... params) {
             MeasureSetting ms = (MeasureSetting)params[0];
             int l = (Integer)params[1];
             int d = (Integer)params[2];
             return connection.measurementStart(ms, l, d);
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                getScadaFragment().setButtonsForMeasurement();
+            }
         }
     }
     
@@ -283,7 +303,7 @@ public class ScadaActivity extends Activity {
             
             if (result) {
                 measuring = false;
-                getScadaFragment().toggleMeasurementLabel();
+                getScadaFragment().toggleMeasurementLabel(false);
                 getScadaFragment().setCamera1ActiveStatus(false);
                 getScadaFragment().setCamera2ActiveStatus(false);
             }
@@ -294,13 +314,22 @@ public class ScadaActivity extends Activity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            
             setCleaning();
+            getScadaFragment().toggleCleaningLabel(true);
         }
         
         @Override
         protected Boolean doInBackground(Object... params) {
             return connection.cleaningStart();
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                getScadaFragment().setButtonsForCleaning();
+            }
         }
     }
     
@@ -328,6 +357,7 @@ public class ScadaActivity extends Activity {
             
             if (result) {
                 cleaning = false;
+                getScadaFragment().toggleCleaningLabel(false);
             }
         }
     }
@@ -386,6 +416,21 @@ public class ScadaActivity extends Activity {
         protected Boolean doInBackground(Object... params) {
             return connection.expositionLength();
         }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
+        }
     }
     
     private class ExposeFrontCameraTask extends GenericAsyncTask {
@@ -393,9 +438,31 @@ public class ScadaActivity extends Activity {
         protected Boolean doInBackground(Object... params) {
             return connection.expositionDiameter();
         }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
+        }
     }
     
     private class StartCalibrationTask extends GenericAsyncTask {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            setCalibrating();
+            getScadaFragment().toggleCalibrationLabel(true);
+        }
+        
         @Override
         protected Boolean doInBackground(Object... params) {
             if (connection.calibrationStart()) {
@@ -414,6 +481,15 @@ public class ScadaActivity extends Activity {
         protected void onProgressUpdate(Integer... values) {
             if (values[0] == 1) {
                 getScadaFragment().logToConsole("Waiting for the calibration arms to be lowered...");
+            }
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                getScadaFragment().setButtonsForCalibration();
             }
         }
     }
@@ -437,6 +513,17 @@ public class ScadaActivity extends Activity {
                 getScadaFragment().logToConsole("Waiting for the calibration arms to be raised...");
             }
         }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                calibrating = false;
+                getScadaFragment().resetPhotoButtonsLabel();
+                getScadaFragment().toggleCalibrationLabel(false);
+            }
+        }
     }
     
     private class CalibrateTopCameraTask extends GenericAsyncTask {
@@ -444,12 +531,42 @@ public class ScadaActivity extends Activity {
         protected Boolean doInBackground(Object... params) {
             return connection.calibrateTopCamera();
         }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
+        }
     }
     
     private class CalibrateFrontCameraTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
             return connection.calibrateFrontCamera();
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
         }
     }
     

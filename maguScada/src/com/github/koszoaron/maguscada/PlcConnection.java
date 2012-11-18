@@ -26,7 +26,7 @@ public class PlcConnection {
     
     public PlcConnection(String address, int port) {
         connection = FinsConnection.newInstance(address, port);
-        connection.setTesting(true);
+        connection.setTesting(true, 6424);
     }
 
     public boolean connect() {
@@ -274,7 +274,7 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
-            if ((getStatus() & Status.CALIBRATION_ARM_L_DOWN.getValue()) == 0) {
+            if ((getStatus() & Status.CALIBRATION_ARM_L_DOWN.getValue()) > 0) {
                 res = setMode(Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS.getValue());
             }
         }
