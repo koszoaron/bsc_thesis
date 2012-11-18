@@ -9,10 +9,6 @@ import com.github.koszoaron.maguscada.util.Constants;
 import com.github.koszoaron.maguscada.util.PlcConstants;
 import com.github.koszoaron.maguscada.util.Utility;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
-import com.github.koszoaron.maguscada.util.Constants.SemaphoreLight;
-import com.github.koszoaron.maguscada.util.Constants.SemaphoreState;
-import com.github.koszoaron.maguscada.util.StatusBits;
-
 import android.app.FragmentTransaction;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,11 +27,6 @@ public class ScadaActivity extends Activity {
     private static final int FL_FRAGMENT_HOLDER = R.id.flMainFragmentHolder;
     private PlcConnection connection;
     private static Handler handler = new Handler();
-
-    private int imageLevel = 0;
-    private int semaphoreRed = 0;
-    private int semaphoreYellow = 0;
-    private int semaphoreGreen = 0;
 
     /* (non-Javadoc)
      * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -107,7 +98,7 @@ public class ScadaActivity extends Activity {
         
         new StartMeasurementTask().execute(what, tubeLenght, tubeDiameter);
         
-        setMeasuring(true);
+        setMeasuring();
         getScadaFragment().toggleMeasurementLabel();
         if (what == MeasureSetting.BOTH) {
             getScadaFragment().setCamera1ActiveStatus(true);
@@ -119,54 +110,54 @@ public class ScadaActivity extends Activity {
         }
     }
     
-    public void endMeasurement() {
-        dlog.v("end measurement");
-        
-        
-    }
-    
     public void reset() {
         dlog.v("reset");
 
-//        getScadaFragment().setSemaphoreState(SemaphoreLight.RED, SemaphoreState.OFF);
-//        getScadaFragment().setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);
-//        getScadaFragment().setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.ON);
-        
-        setMeasuring(false);
-        setCalibrating(false);
-        setCleaning(false);
+        this.measuring = false;
+        this.calibrating = false;
+        this.cleaning = false;
         
         new ResetTask().execute();
     }
     
-    public void checkCleanliness() {
-        dlog.v("check cleanliness");
-        
-        new CheckCleanlinessTask().execute();
+    public void photoTop() {
+        getScadaFragment().logToConsole("Photo: top");
+        new ExposeTopCameraTask().execute();
+    }
+    
+    public void photoFront() {
+        getScadaFragment().logToConsole("Photo: front");
+        new ExposeFrontCameraTask().execute();
     }
     
     public boolean isMeasuring() {
         return measuring;
     }
 
-    public void setMeasuring(boolean measuring) {
-        this.measuring = measuring;
+    public void setMeasuring() {
+        this.measuring = true;
+        this.calibrating = false;
+        this.cleaning = false;
     }
 
     public boolean isCalibrating() {
         return calibrating;
     }
 
-    public void setCalibrating(boolean calibrating) {
-        this.calibrating = calibrating;
+    public void setCalibrating() {
+        this.calibrating = true;
+        this.measuring = false;
+        this.cleaning = false;
     }
 
     public boolean isCleaning() {
         return cleaning;
     }
 
-    public void setCleaning(boolean cleaning) {
-        this.cleaning = cleaning;
+    public void setCleaning() {
+        this.cleaning = true;
+        this.measuring = false;
+        this.calibrating = false;
     }
     
     public void onPositiveDialogAction(String tag) {
@@ -174,14 +165,20 @@ public class ScadaActivity extends Activity {
             getScadaFragment().logToConsole("Shutdown.");
             new ShutdownTask().execute();
         } else if (tag.equals(Constants.FINISH_MEASUREMENT_DIALOG_FRAGMENT)) {
-            getScadaFragment().logToConsole("Finish measurement.");
+            getScadaFragment().logToConsole("Finish measurement");
             new FinishMeasurementTask().execute();
         } else if (tag.equals(Constants.CLEANING_DIALOG_FRAGMENT)) {
-            getScadaFragment().logToConsole("Start cleaning.");
+            getScadaFragment().logToConsole("Start cleaning");
             new StartCleaningTask().execute();
         } else if (tag.equals(Constants.FINISH_CLEANING_DIALOG_FRAGMENT)) {
-            getScadaFragment().logToConsole("Finish cleaning.");
+            getScadaFragment().logToConsole("Finish cleaning");
             new StopCleaningTask().execute();
+        } else if (tag.equals(Constants.CALIBRATION_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Start calibration");
+            new StartCalibrationTask().execute();
+        } else if (tag.equals(Constants.FINISH_CALIBRATION_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Finish calibration");
+            new StopCalibrationTask().execute();
         }
     }
     
@@ -285,7 +282,7 @@ public class ScadaActivity extends Activity {
             super.onPostExecute(result);
             
             if (result) {
-                setMeasuring(false);
+                measuring = false;
                 getScadaFragment().toggleMeasurementLabel();
                 getScadaFragment().setCamera1ActiveStatus(false);
                 getScadaFragment().setCamera2ActiveStatus(false);
@@ -298,7 +295,7 @@ public class ScadaActivity extends Activity {
         protected void onPreExecute() {
             super.onPreExecute();
             
-            setCleaning(true);
+            setCleaning();
         }
         
         @Override
@@ -330,7 +327,7 @@ public class ScadaActivity extends Activity {
             super.onPostExecute(result);
             
             if (result) {
-                setCleaning(false);
+                cleaning = false;
             }
         }
     }

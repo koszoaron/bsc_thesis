@@ -279,32 +279,30 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
                 dialog.show(getFragmentManager(), dialog.getFragmentTag());
             }
         } else if (v == btnA3) {  //calibration
-            //TODO sendMessage
-            //TODO dialog
+            if (getMainActivity().isCalibrating()) {
+                YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.FINISH_CALIBRATION_DIALOG_FRAGMENT, "Finish calibration?");
+                dialog.show(getFragmentManager(), dialog.getFragmentTag());
+            } else {
+                YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.CALIBRATION_DIALOG_FRAGMENT, "Start calibration?");
+                dialog.show(getFragmentManager(), dialog.getFragmentTag());
+            }
         } else if (v == btnA4) {  //warning sign
             //TODO sendMessage
             setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.BLINK);
-        } else if (v == btnA5) {  //em. stop
-            //TODO toggle button
-            
+        } else if (v == btnA5) {  //em. stop          
             //TODO sendMessage
-            setSemaphoreState(SemaphoreLight.RED, SemaphoreState.ON);
-            setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);
-            setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.OFF);
+
         } else if (v == btnB1) {  //reset
             getMainActivity().reset();
-            
-            setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.ON);
         } else if (v == btnB2) {  //track up/down
             //TODO sendMessage.. track
             toggleTrackUpDownDisplay();
         } else if (v == btnB3) {  //photo up
-            //TODO sendMessage.. photo            
-            //TODO cam anim
+            getMainActivity().photoTop();
+            topCameraAnimation();
         } else if (v == btnB4) {  //photo front
-            //TODO sendMessage.. photo
-            //TODO cam anim
-            logToConsole("photo front");
+            getMainActivity().photoFront();
+            frontCameraAnimation();
         } else if (v == btnB5) {  //shutdown
             YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.SHUTDOWN_DIALOG_FRAGMENT, "Do you want to shut down?");
             dialog.show(getFragmentManager(), Constants.SHUTDOWN_DIALOG_FRAGMENT);
@@ -476,5 +474,47 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             tvConsole.append("\n");
         }
         tvConsole.append(text);
+    }
+    
+    private void topCameraAnimation() {
+        boolean visible = false;
+        if (tvCamera1Active.getVisibility() == View.VISIBLE) {
+            visible = true;
+        } else {
+            tvCamera1Active.setVisibility(View.VISIBLE);
+        }
+        final boolean visibility = visible;
+        
+        tvCamera1Active.setTextColor(0xffffffff);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!visibility) {
+                    tvCamera1Active.setVisibility(View.GONE);
+                }
+                tvCamera1Active.setTextColor(0xff00ff00);
+            }
+        }, 1000);
+    }
+    
+    private void frontCameraAnimation() {
+        boolean visible = false;
+        if (tvCamera2Active.getVisibility() == View.VISIBLE) {
+            visible = true;
+        } else {
+            tvCamera2Active.setVisibility(View.VISIBLE);
+        }
+        final boolean visibility = visible;
+        
+        tvCamera2Active.setTextColor(0xffffffff);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!visibility) {
+                    tvCamera2Active.setVisibility(View.GONE);
+                }
+                tvCamera2Active.setTextColor(0xff00ff00);
+            }
+        }, 1000);
     }
 }
