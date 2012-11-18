@@ -82,8 +82,8 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) { 
-            boolean r1 = setMode(Mode.OFF);
-            boolean r2 = setMode(Mode.RESET);
+            boolean r1 = setMode(Mode.OFF.getValue());
+            boolean r2 = setMode(Mode.RESET.getValue());
             
             res = r1 && r2;
         }
@@ -115,7 +115,7 @@ public class PlcConnection {
             boolean r5 = setLights(l);
             boolean r6 = setDelay(Register.CONGESTION_2_WAIT_TIME, Utility.calcCongestion2Time(PlcConstants.CONGESTION2_SENSING_LENGTH, length, PlcConstants.TRACK_SPEED));
             boolean r7 = setDelay(Register.LENGTH_LED_DELAY, Utility.calcTriggerDelayFromLength(length, PlcConstants.EXPOSITION_LENGTH, PlcConstants.TRACK_SPEED));  
-            boolean r8 = setMode(Mode.LENGTH_AND_DIAMETER_MEASUREMENT);
+            boolean r8 = setMode(Mode.LENGTH_AND_DIAMETER_MEASUREMENT.getValue());
             
             res = r1 && r2 && r3 && r4 && r5 && r6 && r7 && r8;
         }
@@ -127,12 +127,27 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
-            res = setMode(Mode.TRACK_EMPTYING);
-            
-            //TODO launch delayed (and repeating) task in handler to check if track has stopped. if true -> notify UI
+            res = setMode(Mode.TRACK_EMPTYING.getValue());
         }
         
         return res;
+    }
+    
+    public boolean isTrackStopped(boolean shortTime) {
+        if (connection.isConnected()) {
+            for (int i = 0; i < (shortTime ? PlcConstants.SHORT_ITERATIONS : PlcConstants.NORMAL_ITERATIONS); i++) {
+                try {
+                    Thread.sleep(shortTime ? PlcConstants.SHORT_SLEEP_TIME : PlcConstants.NORMAL_SLEEP_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if ((getStatus() & Status.TRACK_STOPPED.getValue()) > 0) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     public boolean cleaningStart() {
@@ -141,7 +156,7 @@ public class PlcConnection {
         if (connection.isConnected()) {
             boolean r1 = setCylinderDistance(PlcConstants.SERVO_MAX_POSITION);
             boolean r2 = setFrequencies(Utility.calcMotorFrequency(PlcConstants.SLOW_TRACK_SPEED), Utility.calcMotorFrequency(PlcConstants.SLOW_TRACK_SPEED));
-            boolean r3 = setMode(Mode.CLEANING);
+            boolean r3 = setMode(Mode.CLEANING.getValue());
             
             res = r1 && r2 && r3;
         }
@@ -154,11 +169,9 @@ public class PlcConnection {
         
         if (connection.isConnected()) {
             boolean r1 = setDelay(Register.SINGLE_LENGTH_TURN_TIME, Utility.calcTime(PlcConstants.TRACK_LENGTH / 2, PlcConstants.SLOW_TRACK_SPEED));
-            boolean r2 = setMode(Mode.TRACK_EMPTYING);
+            boolean r2 = setMode(Mode.TRACK_EMPTYING.getValue());
             
             res = r1 && r2;
-            
-            //TODO launch delayed (and repeating) task in handler to check if track has stopped. if true -> notify UI
         }
         
         return res;
@@ -170,19 +183,16 @@ public class PlcConnection {
         if (connection.isConnected()) {
             boolean r1 = setFrequencies(Utility.calcMotorFrequency(PlcConstants.TRACK_SPEED), Utility.calcMotorFrequency(PlcConstants.TRACK_SPEED));
             
-            //TODO sleep 2s until the track is started
+            //sleep 2s until the track is started
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             
-            boolean r2 = setMode(Mode.CLARITY_CHECKING);
+            boolean r2 = setMode(Mode.CLARITY_CHECKING.getValue());
             
-            int triggeringNum = Utility.calcTriggerNumbersForCheckings(PlcConstants.TRACK_LENGTH);
-            int triggeringDelay = Utility.calcTriggerDelayForChecking(PlcConstants.TRACK_SPEED);
-            //TODO do this triggeringNum times and wait triggeringDelay between each run:
-            setMode(Mode.LENGTH_EXPOSITION);
-            //TODO convert to handler task
-            
-            //TODO launch delayed (and repeating) task in handler to check if track has stopped. if true -> notify UI
-            
-            res = r1 && r2; //TODO consider the repetitive task too
+            res = r1 && r2;
         }
         
         return res;
@@ -192,7 +202,7 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
-            res = setMode(Mode.LENGTH_EXPOSITION);
+            res = setMode(Mode.LENGTH_EXPOSITION.getValue());
         }
         
         return res;
@@ -202,7 +212,7 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
-            res = setMode(Mode.DIAMETER_EXPOSITION);
+            res = setMode(Mode.DIAMETER_EXPOSITION.getValue());
         }
         
         return res;
@@ -214,15 +224,16 @@ public class PlcConnection {
         if (connection.isConnected()) {
             boolean r1 = setCylinderDistance(PlcConstants.CALIBRATION_SAMPLE_INSERTION);
             
-            //TODO wait 0.5 sec
+            //wait 0.5 sec
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             
             boolean r2 = setCylinderDistanceWithoutModeChanging(PlcConstants.CALIBRATION_SAMPLE_DIAMETER);
             
-            boolean r3 = setMode(Mode.CALIBRATION);  //TODO also Mode.CALIBRATION_ARM_UNLOCK
-            
-            //TODO wait until both calibration arms are down (~2 min). if not then timeouterror
-            
-            //TODO if there is a problem then set mode to Mode.OFF
+            boolean r3 = setMode(Mode.CALIBRATION.getValue() | Mode.CALIBRATION_ARM_UNLOCK.getValue());            
             
             res = r1 && r2 && r3;
         }
@@ -230,12 +241,41 @@ public class PlcConnection {
         return res;
     }
     
-    public boolean expositionCalibration() {
+    public boolean calibrationStartWait() {
+        if (connection.isConnected()) {
+            for (int i = 0; i < PlcConstants.LONG_ITERATIONS; i++) {
+                try {
+                    Thread.sleep(PlcConstants.LONG_ITERATIONS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
+                boolean topCalibArmDown = (getStatus() & Status.CALIBRATION_ARM_L_DOWN.getValue()) > 0;
+                boolean frontCalibArmDown = (getStatus() & Status.CALIBRATION_ARM_D_DOWN.getValue()) > 0;
+                
+                if (topCalibArmDown && frontCalibArmDown) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    public boolean setModeToOff() {
+        if (connection.isConnected()) {
+            return setMode(Mode.OFF.getValue());
+        }
+        
+        return false;
+    }
+    
+    public boolean calibrateTopCamera() {
         boolean res = false;
         
         if (connection.isConnected()) {
             if ((getStatus() & Status.CALIBRATION_ARM_L_DOWN.getValue()) == 0) {
-                res = setMode(Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS);
+                res = setMode(Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS.getValue());
             }
         }
         
@@ -246,21 +286,27 @@ public class PlcConnection {
         boolean res = false;
         
         if (connection.isConnected()) {
-            res = setMode(Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS);
+            res = setMode(Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS.getValue());
         }
         
         return res;
     }
     
-    public boolean calibrateDiameter() {
+    public boolean calibrateFrontCamera() {
         boolean res = false;
         
         if (connection.isConnected()) {
-            if ((getStatus() & Status.CALIBRATION_ARM_D_DOWN.getValue()) == 0) {
-                boolean r1 = setMode(Mode.CALIBRATE_DIAMETER);
+            if ((getStatus() & Status.CALIBRATION_ARM_D_DOWN.getValue()) > 0) {
+                boolean r1 = setMode(Mode.CALIBRATE_DIAMETER.getValue());
                 boolean r2 = false;
                 
-                //TODO sleep 0.5 sec
+                //sleep 0.5 sec
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
                 if ((getStatus() & Status.EXPOSITION_SENSOR_TRIGGERED.getValue()) == 0) {
                     r2 = true; //if the sensor was not triggered, then it's OK
                 }
@@ -278,11 +324,9 @@ public class PlcConnection {
         if (connection.isConnected()) {
             boolean r1 = setCylinderDistanceWithoutModeChanging(PlcConstants.CALIBRATION_SAMPLE_INSERTION);
             
-            boolean r2 = setMode(Mode.FINISH_CALIBRATION); //TODO and Mode.CALIBRATION to keep that bit active
+            boolean r2 = setMode(Mode.FINISH_CALIBRATION.getValue() | Mode.CALIBRATION.getValue());
             
-            //TODO wait until both calibration arms are up (~2 min). if not then timeouterror
-            
-            boolean r3 = setMode(Mode.RESET); 
+            boolean r3 = setMode(Mode.RESET.getValue()); 
             
             res = r1 && r2 && r3;
         }
@@ -290,11 +334,32 @@ public class PlcConnection {
         return res;
     }
     
+    public boolean calibrationStopWait() {
+        if (connection.isConnected()) {
+            for (int i = 0; i < PlcConstants.LONG_ITERATIONS; i++) {
+                try {
+                    Thread.sleep(PlcConstants.LONG_ITERATIONS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
+                boolean topCalibArmUp = (getStatus() & Status.CALIBRATION_ARM_L_UP.getValue()) > 0;
+                boolean frontCalibArmUp = (getStatus() & Status.CALIBRATION_ARM_D_UP.getValue()) > 0;
+                
+                if (topCalibArmUp && frontCalibArmUp) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
     public boolean shutdown() {
         boolean res = false;
         
         if (connection.isConnected()) {
-            boolean r1 = setMode(Mode.SHUTDOWN);
+            boolean r1 = setMode(Mode.SHUTDOWN.getValue());
             
             boolean r2 = disconnect();
             
@@ -309,9 +374,9 @@ public class PlcConnection {
         
         if (connection.isConnected()) {
             if (enable) {
-                res = setMode(Mode.YELLOW_LIGHT_ENABLE);
+                res = setMode(Mode.YELLOW_LIGHT_ENABLE.getValue());
             } else {
-                res = setMode(Mode.YELLOW_LIGHT_DISABLE);
+                res = setMode(Mode.YELLOW_LIGHT_DISABLE.getValue());
             }
         }
         
@@ -323,6 +388,8 @@ public class PlcConnection {
         
         if (connection.isConnected()) {
             res = connection.readRegister(MEMORY_AREA_B2, Register.STATUS_BITS.getValue());
+            
+            //TODO store this value somewhere and return when the method is called. retrieve the value indepently of the callings
         }
         
         return res;
@@ -381,7 +448,7 @@ public class PlcConnection {
             dlog.d("setCylinderDistance: " + distance);
             
             boolean r1 = connection.writeRegister(MEMORY_AREA_B2, Register.CYLINDER_DISTANCE.getValue(), new int[] {distance});
-            boolean r2 = setMode(Mode.DIAMETER_SETTING);
+            boolean r2 = setMode(Mode.DIAMETER_SETTING.getValue());
             
             res = r1 && r2;
         }
@@ -425,15 +492,13 @@ public class PlcConnection {
         return res;
     }
     
-    private boolean setMode(Mode m) {
+    private boolean setMode(int modeWord) {
         boolean res = false;
         
-        if (connection.isConnected()) { 
-            int modeWord = m.getValue();
-            
-            if (m == Mode.YELLOW_LIGHT_DISABLE) {
+        if (connection.isConnected()) {             
+            if (modeWord == Mode.YELLOW_LIGHT_DISABLE.getValue()) {
                 modeWord = previousModeWord;
-            } else if (m == Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS || m == Mode.DIAMETER_EXPOSITION || m == Mode.CALIBRATE_DIAMETER || m == Mode.LENGTH_EXPOSITION || m == Mode.YELLOW_LIGHT_ENABLE) {
+            } else if (modeWord == Mode.EXPOSITION_WITH_CALIBRATION_LIGHTS.getValue() || modeWord == Mode.DIAMETER_EXPOSITION.getValue() || modeWord == Mode.CALIBRATE_DIAMETER.getValue() || modeWord == Mode.LENGTH_EXPOSITION.getValue() || modeWord == Mode.YELLOW_LIGHT_ENABLE.getValue()) {
                 if ((previousModeWord & Mode.CALIBRATION_ARM_UNLOCK.getValue()) > 0) {
                     modeWord |= Mode.CALIBRATION.getValue();
                 } else {

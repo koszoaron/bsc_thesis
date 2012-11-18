@@ -265,14 +265,19 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     public void onClick(View v) {
         if (v == btnA1) {  //measurement
             if (getMainActivity().isMeasuring()) {
-                getMainActivity().endMeasurement();
+                YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.FINISH_MEASUREMENT_DIALOG_FRAGMENT, "Finish measurement?");
+                dialog.show(getFragmentManager(), dialog.getFragmentTag());
             } else {
                 getMainActivity().showDialog(Constants.MEASUREMENT_DIALOG_FRAGMENT);
             }
-            //TODO stop meas. func.
         } else if (v == btnA2) {  //cleaning
-            //TODO sendMessage
-            //TODO dialog
+            if (getMainActivity().isCleaning()) {
+                YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.FINISH_CLEANING_DIALOG_FRAGMENT, "Finish cleaning?");
+                dialog.show(getFragmentManager(), dialog.getFragmentTag());
+            } else {
+                YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.CLEANING_DIALOG_FRAGMENT, "Check cleanliness or start cleaning?", "Start cleaning", "Check cleanliness");
+                dialog.show(getFragmentManager(), dialog.getFragmentTag());
+            }
         } else if (v == btnA3) {  //calibration
             //TODO sendMessage
             //TODO dialog
@@ -301,9 +306,8 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
             //TODO cam anim
             logToConsole("photo front");
         } else if (v == btnB5) {  //shutdown
-            //TODO dialog
-            logToConsole("shutdown");
-            getMainActivity().shutdown();
+            YesNoDialogFragment dialog = YesNoDialogFragment.newInstance(Constants.SHUTDOWN_DIALOG_FRAGMENT, "Do you want to shut down?");
+            dialog.show(getFragmentManager(), Constants.SHUTDOWN_DIALOG_FRAGMENT);
         } else if (v == btnConsole) {
             if (tvConsole.getVisibility() == View.VISIBLE) {
                 tvConsole.setVisibility(View.GONE);
@@ -381,6 +385,22 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         }
     }
     
+    public void toggleCleaningLabel() {
+        if (getMainActivity().isCleaning()) {
+            btnA2.setText("Stop\nCleaning");
+        } else {
+            btnA2.setText("Cleaning");
+        }
+    }
+    
+    public void toggleCalibrationLabel() {
+        if (getMainActivity().isCalibrating()) {
+            btnA3.setText("Stop\nCalibration");
+        } else {
+            btnA3.setText("Calibration");
+        }
+    }
+    
     public void setCongestion1Status(boolean enabled) {
         handler.removeCallbacks(flashCongestion1SignTask);
         if (enabled) {
@@ -450,7 +470,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         }
     }
     
-    private void logToConsole(String text) {
+    public void logToConsole(String text) {
         dlog.r(text);
         if (tvConsole.getText() != null && !tvConsole.getText().equals("")) {
             tvConsole.append("\n");

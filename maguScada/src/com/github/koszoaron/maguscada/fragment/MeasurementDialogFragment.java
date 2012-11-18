@@ -57,8 +57,6 @@ public class MeasurementDialogFragment extends BaseDialogFragment implements OnC
         rbDiameter.setOnClickListener(this);
         rbBoth.setOnClickListener(this);
         
-        rbBoth.toggle();
-        
         return v;
     }
     

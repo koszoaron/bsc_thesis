@@ -6,6 +6,8 @@ import com.github.koszoaron.maguscada.fragment.ConnectDialogFragment;
 import com.github.koszoaron.maguscada.fragment.MeasurementDialogFragment;
 import com.github.koszoaron.maguscada.fragment.ScadaFragment;
 import com.github.koszoaron.maguscada.util.Constants;
+import com.github.koszoaron.maguscada.util.PlcConstants;
+import com.github.koszoaron.maguscada.util.Utility;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreLight;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreState;
@@ -94,14 +96,14 @@ public class ScadaActivity extends Activity {
     }
     
     public void establishConnection(String address, int port) {
-        dlog.r("connect to " + address + ":" + port);
+        dlog.v("connect to " + address + ":" + port);
         
         connection = new PlcConnection(address, port);
         new ConnectTask().execute();        
     }
     
     public void beginMeasurement(final MeasureSetting what, final int tubeLenght, final int tubeDiameter) {
-        dlog.r("begin measurement: " + what + "; " + tubeLenght + "; " + tubeDiameter);
+        dlog.v("begin measurement: " + what + "; " + tubeLenght + "; " + tubeDiameter);
         
         new StartMeasurementTask().execute(what, tubeLenght, tubeDiameter);
         
@@ -118,17 +120,13 @@ public class ScadaActivity extends Activity {
     }
     
     public void endMeasurement() {
-        dlog.r("end measurement");
+        dlog.v("end measurement");
         
-        connection.measurementStop();
-        setMeasuring(false);
-        getScadaFragment().toggleMeasurementLabel();
-        getScadaFragment().setCamera1ActiveStatus(false);
-        getScadaFragment().setCamera2ActiveStatus(false);
+        
     }
     
     public void reset() {
-        dlog.r("reset");
+        dlog.v("reset");
 
 //        getScadaFragment().setSemaphoreState(SemaphoreLight.RED, SemaphoreState.OFF);
 //        getScadaFragment().setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);
@@ -141,8 +139,10 @@ public class ScadaActivity extends Activity {
         new ResetTask().execute();
     }
     
-    public void shutdown() {
-        new ShutdownTask().execute();
+    public void checkCleanliness() {
+        dlog.v("check cleanliness");
+        
+        new CheckCleanlinessTask().execute();
     }
     
     public boolean isMeasuring() {
@@ -167,6 +167,31 @@ public class ScadaActivity extends Activity {
 
     public void setCleaning(boolean cleaning) {
         this.cleaning = cleaning;
+    }
+    
+    public void onPositiveDialogAction(String tag) {
+        if (tag.equals(Constants.SHUTDOWN_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Shutdown.");
+            new ShutdownTask().execute();
+        } else if (tag.equals(Constants.FINISH_MEASUREMENT_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Finish measurement.");
+            new FinishMeasurementTask().execute();
+        } else if (tag.equals(Constants.CLEANING_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Start cleaning.");
+            new StartCleaningTask().execute();
+        } else if (tag.equals(Constants.FINISH_CLEANING_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Finish cleaning.");
+            new StopCleaningTask().execute();
+        }
+    }
+    
+    public void onNegativeDialogAction(String tag) {
+        if (tag.equals(Constants.CLEANING_DIALOG_FRAGMENT)) {
+            getScadaFragment().logToConsole("Check cleanliness...");
+            new CheckCleanlinessTask().execute();
+        } else {
+            //...
+        }
     }
 
     private BaseFragment getFragmentByTag(String tag) {
@@ -195,7 +220,7 @@ public class ScadaActivity extends Activity {
      * Nested AsyncTask classes
      */
     
-    private abstract class GenericAsyncTask extends AsyncTask<Object, Void, Boolean> {
+    private abstract class GenericAsyncTask extends AsyncTask<Object, Integer, Boolean> {
         @Override
         protected void onPreExecute() {
             onTaskPreExecute(true);
@@ -240,11 +265,42 @@ public class ScadaActivity extends Activity {
     private class FinishMeasurementTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.measurementStop();
+            if (connection.measurementStop()) {
+                publishProgress(1);
+                return connection.isTrackStopped(true);
+            }
+            
+            return false;
+        }
+        
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            if (values[0] == 1) {
+                getScadaFragment().logToConsole("Waiting for the track to stop...");
+            }
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                setMeasuring(false);
+                getScadaFragment().toggleMeasurementLabel();
+                getScadaFragment().setCamera1ActiveStatus(false);
+                getScadaFragment().setCamera2ActiveStatus(false);
+            }
         }
     }
     
     private class StartCleaningTask extends GenericAsyncTask {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            
+            setCleaning(true);
+        }
+        
         @Override
         protected Boolean doInBackground(Object... params) {
             return connection.cleaningStart();
@@ -254,14 +310,77 @@ public class ScadaActivity extends Activity {
     private class StopCleaningTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.cleaningStop();
+            if (connection.cleaningStop()) {
+                publishProgress(1);
+                return connection.isTrackStopped(true);
+            }
+            
+            return false;
+        }
+        
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            if (values[0] == 1) {
+                getScadaFragment().logToConsole("Waiting for the track to stop...");
+            }
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                setCleaning(false);
+            }
         }
     }
     
     private class CheckCleanlinessTask extends GenericAsyncTask {
+        private int triggeringNum = 0;
+        private int triggeringDelay = 0;
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            
+            triggeringNum = Utility.calcTriggerNumbersForCheckings(PlcConstants.TRACK_LENGTH);
+            triggeringDelay = Utility.calcTriggerDelayForChecking(PlcConstants.TRACK_SPEED);
+            getScadaFragment().logToConsole("Triggering the top camera " + triggeringNum + " times with a " + triggeringDelay + "ms pause");
+        }
+        
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.checkCleanliness();
+            if (connection.checkCleanliness()) {
+                publishProgress(1);
+                for (int i = 0; i < triggeringNum; i++) {
+                    publishProgress(i + 2);
+                    if (!connection.expositionLength()) {
+                        return false;
+                    } else if (i < triggeringNum - 1) {
+                        try {
+                            Thread.sleep(triggeringDelay);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                publishProgress(triggeringNum + 2);
+                return connection.isTrackStopped(false);
+            }
+            
+            return false;
+        }
+        
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            int progress = values[0];
+            if (progress == 1) {
+                //init done
+            } else if (progress > 1 && progress < triggeringNum + 2) {
+                getScadaFragment().logToConsole("Cleanliness check photo #" + (progress - 1));
+            } else {
+                getScadaFragment().logToConsole("Waiting for the track to stop...");
+            }
         }
     }
     
@@ -282,28 +401,58 @@ public class ScadaActivity extends Activity {
     private class StartCalibrationTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.calibrationStart();
+            if (connection.calibrationStart()) {
+                publishProgress(1);
+                if (connection.calibrationStartWait()) {
+                    return true;
+                } else {
+                    connection.setModeToOff();
+                }
+            }
+            
+            return false;
+        }
+        
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            if (values[0] == 1) {
+                getScadaFragment().logToConsole("Waiting for the calibration arms to be lowered...");
+            }
         }
     }
     
     private class StopCalibrationTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.calibrationStop();
+            if (connection.calibrationStopWait()) {
+                publishProgress(1);
+                if (connection.calibrationStopWait()) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            if (values[0] == 1) {
+                getScadaFragment().logToConsole("Waiting for the calibration arms to be raised...");
+            }
         }
     }
     
-    private class ExposeCamerasForCalibrationTask extends GenericAsyncTask {
+    private class CalibrateTopCameraTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.expositionCalibration();
+            return connection.calibrateTopCamera();
         }
     }
     
     private class CalibrateFrontCameraTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            return connection.calibrateDiameter();
+            return connection.calibrateFrontCamera();
         }
     }
     
@@ -357,7 +506,7 @@ public class ScadaActivity extends Activity {
         
         @Override
         protected void onPostExecute(Integer result) {
-            dlog.d("getStatus: " + result);
+            dlog.v("getStatus: " + result);
             
             //stop progressbar
             getScadaFragment().setProgressBarStatus(false);
