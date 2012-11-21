@@ -1,4 +1,4 @@
-package com.github.koszoaron.maguscada.util;
+package com.github.koszoaron.maguscada.communication;
 
 public class PlcConstants {
     

@@ -1,17 +1,18 @@
 /**
  * 
  */
-package com.github.koszoaron.maguscada;
+package com.github.koszoaron.maguscada.communication;
 
 import com.github.koszoaron.jfinslib.FinsConnection;
+import com.github.koszoaron.maguscada.callback.OnFrequencyChangedListener;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Lights;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Mode;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Register;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Status;
+import com.github.koszoaron.maguscada.communication.PlcConstants.TrackDirection;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
-import com.github.koszoaron.maguscada.util.PlcConstants;
-import com.github.koszoaron.maguscada.util.PlcConstants.Status;
+import com.github.koszoaron.maguscada.util.Logger;
 import com.github.koszoaron.maguscada.util.Utility;
-import com.github.koszoaron.maguscada.util.PlcConstants.Lights;
-import com.github.koszoaron.maguscada.util.PlcConstants.Mode;
-import com.github.koszoaron.maguscada.util.PlcConstants.Register;
-import com.github.koszoaron.maguscada.util.PlcConstants.TrackDirection;
 
 /**
  * @author Aron Koszo <koszoaron@gmail.com>
@@ -20,13 +21,16 @@ public class PlcConnection {
     
     private static final int MEMORY_AREA_B2 = 0xb2;
     private static Logger dlog = new Logger(PlcConnection.class.getSimpleName());
+    private OnFrequencyChangedListener frequencyChangeListener;
     
     private FinsConnection connection;
     private int previousModeWord = Mode.OFF.getValue();
     
-    public PlcConnection(String address, int port) {
+    
+    public PlcConnection(String address, int port, OnFrequencyChangedListener freqChangeListener) {
         connection = FinsConnection.newInstance(address, port);
         connection.setTesting(true, 6424);
+        this.frequencyChangeListener = freqChangeListener;
     }
 
     public boolean connect() {
@@ -436,6 +440,11 @@ public class PlcConnection {
             boolean r2 = connection.writeRegister(MEMORY_AREA_B2, Register.FREQCHANGER2.getValue(), new int[] {cylinderDir.getValue(), cylinderFrequency});
             
             res = r1 && r2;
+            
+            if (res) {
+                frequencyChangeListener.onMotor1FrequencyChanged(trackFrequency);
+                frequencyChangeListener.onMotor2FrequencyChanged(cylinderFrequency);
+            }
         }
         
         return res;

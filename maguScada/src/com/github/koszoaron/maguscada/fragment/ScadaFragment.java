@@ -12,9 +12,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.github.koszoaron.maguscada.Logger;
 import com.github.koszoaron.maguscada.R;
 import com.github.koszoaron.maguscada.util.Constants;
+import com.github.koszoaron.maguscada.util.Logger;
 import com.github.koszoaron.maguscada.util.Constants.Motor;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreLight;
 import com.github.koszoaron.maguscada.util.Constants.SemaphoreState;
@@ -251,9 +251,6 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         btnB3.setText("Photo: Up");
         btnB4.setText("Photo: Front");
         btnB5.setText("Shut down");
-        
-        setMotorSpeedDisplay(Motor.MOTOR1, 100);
-        setMotorSpeedDisplay(Motor.MOTOR2, 1234);
                                 
         return v;
     }
@@ -287,8 +284,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
                 dialog.show(getFragmentManager(), dialog.getFragmentTag());
             }
         } else if (v == btnA4) {  //warning sign
-            //TODO sendMessage
-            setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.BLINK);
+            getMainActivity().toggleYellowLight();
         } else if (v == btnA5) {  //em. stop          
             //TODO sendMessage
 
@@ -479,12 +475,14 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     public void setButtonsForMeasurement() {
         setButtonsStatus(false, true);
         btnA1.setEnabled(true);
+        btnA4.setEnabled(true);
         btnB2.setEnabled(true);
     }
     
     public void setButtonsForCleaning() {
         setButtonsStatus(false, true);
         btnA2.setEnabled(true);
+        btnA4.setEnabled(true);
         btnB3.setEnabled(true);
         btnB4.setEnabled(true);
     }
@@ -492,6 +490,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     public void setButtonsForCalibration() {
         setButtonsStatus(false, true);
         btnA3.setEnabled(true);
+        btnA4.setEnabled(true);
         btnB3.setEnabled(true);
         btnB4.setEnabled(true);
         btnB3.setText("Calibrate Top\nCamera");

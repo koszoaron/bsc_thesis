@@ -1,5 +1,7 @@
 package com.github.koszoaron.maguscada.util;
 
+import com.github.koszoaron.maguscada.communication.PlcConstants;
+
 /**
  * A class containing utility methods
  */

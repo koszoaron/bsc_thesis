@@ -1,4 +1,4 @@
-package com.github.koszoaron.maguscada;
+package com.github.koszoaron.maguscada.util;
 
 import android.util.Log;
 

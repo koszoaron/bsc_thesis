@@ -1,12 +1,17 @@
 package com.github.koszoaron.maguscada;
 
+import com.github.koszoaron.maguscada.callback.OnFrequencyChangedListener;
+import com.github.koszoaron.maguscada.communication.PlcConnection;
+import com.github.koszoaron.maguscada.communication.PlcConstants;
+import com.github.koszoaron.maguscada.communication.StatusBits;
 import com.github.koszoaron.maguscada.fragment.BaseDialogFragment;
 import com.github.koszoaron.maguscada.fragment.BaseFragment;
 import com.github.koszoaron.maguscada.fragment.ConnectDialogFragment;
 import com.github.koszoaron.maguscada.fragment.MeasurementDialogFragment;
 import com.github.koszoaron.maguscada.fragment.ScadaFragment;
 import com.github.koszoaron.maguscada.util.Constants;
-import com.github.koszoaron.maguscada.util.PlcConstants;
+import com.github.koszoaron.maguscada.util.Constants.Motor;
+import com.github.koszoaron.maguscada.util.Logger;
 import com.github.koszoaron.maguscada.util.Utility;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
 import android.app.FragmentTransaction;
@@ -17,16 +22,33 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 
-public class ScadaActivity extends Activity {
+public class ScadaActivity extends Activity implements OnFrequencyChangedListener {
     private static Logger dlog = new Logger(ScadaActivity.class.getSimpleName());
+    
+    private static final int FL_FRAGMENT_HOLDER = R.id.flMainFragmentHolder;
+    private static final int CHECK_STATUS_BITS_REPEAT_DELAY = 1000;
     
     private boolean measuring = false;
     private boolean calibrating = false;
     private boolean cleaning = false;
-    
-    private static final int FL_FRAGMENT_HOLDER = R.id.flMainFragmentHolder;
+    private boolean yellowLightOn = false;
+        
     private PlcConnection connection;
     private static Handler handler = new Handler();
+    
+    private Runnable checkStatusBitsTask = new Runnable() {
+        @Override
+        public void run() {
+            int status = connection.getStatus();
+            if (status != -1) {
+                StatusBits sb = new StatusBits(status);
+                dlog.v(sb.toString());
+                //TODO update UI: congestion, track stopped, etc
+            }
+            
+            handler.postDelayed(this, CHECK_STATUS_BITS_REPEAT_DELAY);
+        }
+    };
 
     /* (non-Javadoc)
      * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -89,13 +111,13 @@ public class ScadaActivity extends Activity {
     public void establishConnection(String address, int port) {
         dlog.v("connect to " + address + ":" + port);
         
-        connection = new PlcConnection(address, port);
+        connection = new PlcConnection(address, port, this);
         new ConnectTask().execute();        
     }
     
     public void beginMeasurement(final MeasureSetting what, final int tubeLenght, final int tubeDiameter) {
         dlog.v("begin measurement: " + what + "; " + tubeLenght + "; " + tubeDiameter);
-        
+        getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR2, 0);
         new StartMeasurementTask().execute(what, tubeLenght, tubeDiameter);
         getScadaFragment().logToConsole("Start measurement: " + what + " (" + tubeLenght + "x" + tubeDiameter + ")");
         setMeasuring();
@@ -139,6 +161,11 @@ public class ScadaActivity extends Activity {
         new CalibrateFrontCameraTask().execute();
     }
     
+    public void toggleYellowLight() {
+        yellowLightOn = !yellowLightOn;
+        new ToggleYellowWarningTask().execute(yellowLightOn);
+    }
+    
     public boolean isMeasuring() {
         return measuring;
     }
@@ -169,6 +196,14 @@ public class ScadaActivity extends Activity {
         this.calibrating = false;
     }
     
+    public boolean isYellowLightOn() {
+        return yellowLightOn;
+    }
+    
+    public void setYellowLight(boolean on) {
+        this.yellowLightOn = on;
+    }
+    
     public void onPositiveDialogAction(String tag) {
         if (tag.equals(Constants.SHUTDOWN_DIALOG_FRAGMENT)) {
             getScadaFragment().logToConsole("Shutdown");
@@ -196,6 +231,26 @@ public class ScadaActivity extends Activity {
             getScadaFragment().logToConsole("Check cleanliness...");
             new CheckCleanlinessTask().execute();
         }
+    }
+
+    @Override
+    public void onMotor1FrequencyChanged(final int freq) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR1, freq);
+            }
+        });
+    }
+
+    @Override
+    public void onMotor2FrequencyChanged(final int freq) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR2, freq);
+            }
+        });
     }
 
     private BaseFragment getFragmentByTag(String tag) {
@@ -228,13 +283,16 @@ public class ScadaActivity extends Activity {
         @Override
         protected void onPreExecute() {
             onTaskPreExecute(true);
+            handler.removeCallbacks(checkStatusBitsTask);
         }
         
         @Override
         protected void onPostExecute(Boolean result) {
             if (result) {
                 onTaskPostExecute();
+                handler.post(checkStatusBitsTask);
             } else {
+                dlog.e("Error executing task: " + this.getClass().getSimpleName());
                 //TODO error dialog
                 //disconnect ?
             }
@@ -250,6 +308,11 @@ public class ScadaActivity extends Activity {
         @Override
         protected Boolean doInBackground(Object... params) {
             return connection.connect() && connection.init();            
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
         }
     }
     
@@ -294,6 +357,7 @@ public class ScadaActivity extends Activity {
         protected void onProgressUpdate(Integer... values) {
             if (values[0] == 1) {
                 getScadaFragment().logToConsole("Waiting for the track to stop...");
+              //TODO keep updating the UI -> get status bits (needed?)
             }
         }
         
@@ -306,6 +370,8 @@ public class ScadaActivity extends Activity {
                 getScadaFragment().toggleMeasurementLabel(false);
                 getScadaFragment().setCamera1ActiveStatus(false);
                 getScadaFragment().setCamera2ActiveStatus(false);
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR1, 0);
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR2, 0);
             }
         }
     }
@@ -348,6 +414,7 @@ public class ScadaActivity extends Activity {
         protected void onProgressUpdate(Integer... values) {
             if (values[0] == 1) {
                 getScadaFragment().logToConsole("Waiting for the track to stop...");
+              //TODO keep updating the UI -> get status bits (needed?)
             }
         }
         
@@ -358,6 +425,8 @@ public class ScadaActivity extends Activity {
             if (result) {
                 cleaning = false;
                 getScadaFragment().toggleCleaningLabel(false);
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR1, 0);
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR2, 0);
             }
         }
     }
@@ -407,6 +476,17 @@ public class ScadaActivity extends Activity {
                 getScadaFragment().logToConsole("Cleanliness check photo #" + (progress - 1));
             } else {
                 getScadaFragment().logToConsole("Waiting for the track to stop...");
+              //TODO keep updating the UI -> get status bits (needed?)
+            }
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR1, 0);
+                getScadaFragment().setMotorSpeedDisplay(Motor.MOTOR2, 0);
             }
         }
     }
@@ -481,6 +561,7 @@ public class ScadaActivity extends Activity {
         protected void onProgressUpdate(Integer... values) {
             if (values[0] == 1) {
                 getScadaFragment().logToConsole("Waiting for the calibration arms to be lowered...");
+              //TODO keep updating the UI -> get status bits (needed?)
             }
         }
         
@@ -511,6 +592,7 @@ public class ScadaActivity extends Activity {
         protected void onProgressUpdate(Integer... values) {
             if (values[0] == 1) {
                 getScadaFragment().logToConsole("Waiting for the calibration arms to be raised...");
+                //TODO keep updating the UI -> get status bits (needed?)
             }
         }
         
@@ -603,35 +685,21 @@ public class ScadaActivity extends Activity {
             boolean enable = (Boolean)params[0];
             return connection.yellowWarning(enable);
         }
-    }
-    
-    private class GetStatusTask extends AsyncTask<Void, Void, Integer> {
-        @Override
-        protected void onPreExecute() {
-            //start progressbar
-            getScadaFragment().setProgressBarStatus(true);
-                        
-        }
         
         @Override
-        protected Integer doInBackground(Void... params) {
-            return connection.getStatus();
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
         }
-        
-        @Override
-        protected void onPostExecute(Integer result) {
-            dlog.v("getStatus: " + result);
-            
-            //stop progressbar
-            getScadaFragment().setProgressBarStatus(false);
-            
-            //update UI
-            //enable buttons
-            
-            
-        }
-        
-    }
-    
+    }   
     
 }

@@ -1,9 +1,9 @@
 /**
  * 
  */
-package com.github.koszoaron.maguscada.util;
+package com.github.koszoaron.maguscada.communication;
 
-import com.github.koszoaron.maguscada.util.PlcConstants.Status;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Status;
 
 public class StatusBits {
     private boolean emergencyStop;
