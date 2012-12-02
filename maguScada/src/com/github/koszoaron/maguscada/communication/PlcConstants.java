@@ -233,4 +233,35 @@ public class PlcConstants {
             return value;
         }
     }
+    
+    public static enum Semaphore {
+        RED (1),
+        YELLOW (2),
+        GREEN (4);
+        
+        int value;
+        
+        private Semaphore(int value) {
+            this.value = value;
+        }
+        
+        public int getValue() {
+            return value;
+        }
+    }
+    
+    public static final int SEMAPHORE_RED_REGISTER = 103;
+    public static final int SEMAPHORE_RED_BIT = 0;
+    public static final int SEMAPHORE_YELLOW_REGISTER = 102;
+    public static final int SEMAPHORE_YELLOW_BIT = 7;
+    public static final int SEMAPHORE_GREEN_REGISTER = 102;
+    public static final int SEMAPHORE_GREEN_BIT = 6;
+    public static final int TRACK_POS_BTN_REGISTER = 2;
+    public static final int TRACK_POS_BTN_BIT = 9;
+    public static final int TRACK_POS_UP_REGISTER = 103;
+    public static final int TRACK_POS_UP_BIT = 1;
+    public static final int TRACK_POS_DOWN_REGISTER = 103;
+    public static final int TRACK_POS_DOWN_BIT = 2;
+    public static final int EMERGENCYSTOP_BUTTON_REGISTER = 0;
+    public static final int EMERGENCYSTOP_BUTTON_BIT = 2;
 }

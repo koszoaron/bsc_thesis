@@ -8,6 +8,7 @@ import com.github.koszoaron.maguscada.callback.OnFrequencyChangedListener;
 import com.github.koszoaron.maguscada.communication.PlcConstants.Lights;
 import com.github.koszoaron.maguscada.communication.PlcConstants.Mode;
 import com.github.koszoaron.maguscada.communication.PlcConstants.Register;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Semaphore;
 import com.github.koszoaron.maguscada.communication.PlcConstants.Status;
 import com.github.koszoaron.maguscada.communication.PlcConstants.TrackDirection;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
@@ -19,7 +20,9 @@ import com.github.koszoaron.maguscada.util.Utility;
  */
 public class PlcConnection {
     
-    private static final int MEMORY_AREA_B2 = 0xb2;
+    private static final int MEMORY_AREA_B2 = 0xb2;  //H
+    private static final int MEMORY_AREA_30 = 0x30;  //CIO
+    
     private static Logger dlog = new Logger(PlcConnection.class.getSimpleName());
     private OnFrequencyChangedListener frequencyChangeListener;
     
@@ -29,7 +32,7 @@ public class PlcConnection {
     
     public PlcConnection(String address, int port, OnFrequencyChangedListener freqChangeListener) {
         connection = FinsConnection.newInstance(address, port);
-        connection.setTesting(true, 6424);
+        connection.setTesting(false, 6424);
         this.frequencyChangeListener = freqChangeListener;
     }
 
@@ -249,7 +252,7 @@ public class PlcConnection {
         if (connection.isConnected()) {
             for (int i = 0; i < PlcConstants.LONG_ITERATIONS; i++) {
                 try {
-                    Thread.sleep(PlcConstants.LONG_ITERATIONS);
+                    Thread.sleep(PlcConstants.LONG_SLEEP_TIME);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -342,7 +345,7 @@ public class PlcConnection {
         if (connection.isConnected()) {
             for (int i = 0; i < PlcConstants.LONG_ITERATIONS; i++) {
                 try {
-                    Thread.sleep(PlcConstants.LONG_ITERATIONS);
+                    Thread.sleep(PlcConstants.LONG_SLEEP_TIME);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -392,8 +395,58 @@ public class PlcConnection {
         
         if (connection.isConnected()) {
             res = connection.readRegister(MEMORY_AREA_B2, Register.STATUS_BITS.getValue());
+        }
+        
+        return res;
+    }
+    
+    public int getSemaphoreStatus() {
+        int res = -1;
+        
+        if (connection.isConnected()) {
+            int red = connection.readRegister(MEMORY_AREA_30, PlcConstants.SEMAPHORE_RED_REGISTER, PlcConstants.SEMAPHORE_RED_BIT);
+            int yellow = connection.readRegister(MEMORY_AREA_30, PlcConstants.SEMAPHORE_YELLOW_REGISTER, PlcConstants.SEMAPHORE_YELLOW_BIT);
+            int green = connection.readRegister(MEMORY_AREA_30, PlcConstants.SEMAPHORE_GREEN_REGISTER, PlcConstants.SEMAPHORE_GREEN_BIT);
             
-            //TODO store this value somewhere and return when the method is called. retrieve the value indepently of the callings
+            res = 0;
+            res |= (red * Semaphore.RED.getValue());
+            res |= (yellow * Semaphore.YELLOW.getValue());
+            res |= (green * Semaphore.GREEN.getValue());
+        }
+        
+        return res;
+    }
+    
+    public int getTrackPosition() {
+        int res = -1;
+        
+        if (connection.isConnected()) {
+            int up = connection.readRegister(MEMORY_AREA_30, PlcConstants.TRACK_POS_UP_REGISTER, PlcConstants.TRACK_POS_UP_BIT);
+            int down = connection.readRegister(MEMORY_AREA_30, PlcConstants.TRACK_POS_DOWN_REGISTER, PlcConstants.TRACK_POS_DOWN_BIT);
+            
+            if (up != 0) {
+                res = 1;
+            } else if (down != 0) {
+                res = 2;
+            }
+        }
+        
+        return res;
+    }
+    
+    public boolean toggleTrackPosition() {
+        boolean res = false;
+        
+        if (connection.isConnected()) {
+            boolean r1 = connection.writeRegisterBits(MEMORY_AREA_30, PlcConstants.TRACK_POS_BTN_REGISTER, PlcConstants.TRACK_POS_BTN_BIT, new int[] {1});
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            boolean r2 = connection.writeRegisterBits(MEMORY_AREA_30, PlcConstants.TRACK_POS_BTN_REGISTER, PlcConstants.TRACK_POS_BTN_BIT, new int[] {0});
+            
+            res = r1 && r2;
         }
         
         return res;

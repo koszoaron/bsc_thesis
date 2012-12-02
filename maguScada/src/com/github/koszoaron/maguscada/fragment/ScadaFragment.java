@@ -67,6 +67,12 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     private SemaphoreState yellowState = SemaphoreState.OFF;
     private SemaphoreState greenState = SemaphoreState.OFF;
     
+    private boolean congestion1SignStatus = false;
+    private boolean congestion2SignStatus = false;
+    private boolean servoProblemSignStatus = false;
+    private boolean noPressureSignStatus = false;
+    private boolean serviceDoorSignStatus = false;
+    
     private Runnable blinkSemaphoreLightsTask = new Runnable() {        
         @Override
         public void run() {
@@ -291,8 +297,7 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
         } else if (v == btnB1) {  //reset
             getMainActivity().reset();
         } else if (v == btnB2) {  //track up/down
-            //TODO sendMessage.. track
-            toggleTrackUpDownDisplay();
+            getMainActivity().toggleTrackPosition();
         } else if (v == btnB3) {  //photo up
             if (getMainActivity().isCalibrating()) {
                 getMainActivity().calibrateTop();
@@ -404,37 +409,62 @@ public class ScadaFragment extends BaseFragment implements OnClickListener {
     }
     
     public void setCongestion1Status(boolean enabled) {
-        handler.removeCallbacks(flashCongestion1SignTask);
-        if (enabled) {
-            handler.post(flashCongestion1SignTask);
+        if (congestion1SignStatus != enabled) {
+            handler.removeCallbacks(flashCongestion1SignTask);
+            if (enabled) {
+                handler.post(flashCongestion1SignTask);
+            } else {
+                tvCongestion1.setVisibility(View.GONE);
+            }
+            congestion1SignStatus = enabled;
         }
     }
     
     public void setCongestion2Status(boolean enabled) {
-        handler.removeCallbacks(flashCongestion2SignTask);
-        if (enabled) {
-            handler.post(flashCongestion2SignTask);
+        if (congestion2SignStatus != enabled) {
+            handler.removeCallbacks(flashCongestion2SignTask);
+            if (enabled) {
+                handler.post(flashCongestion2SignTask);
+            } else {
+                tvCongestion2.setVisibility(View.GONE);
+            }
+            congestion2SignStatus = enabled;
         }
     }
     
     public void setServoProblemStatus(boolean enabled) {
-        handler.removeCallbacks(flashServoProblemSignTask);
-        if (enabled) {
-            handler.post(flashServoProblemSignTask);
+        if (servoProblemSignStatus != enabled) {
+            handler.removeCallbacks(flashServoProblemSignTask);
+            if (enabled) {
+                handler.post(flashServoProblemSignTask);
+            } else {
+                tvServoProblem.setVisibility(View.GONE);
+            }
+            servoProblemSignStatus = enabled;
         }
     }
     
     public void setNoPressureStatus(boolean enabled) {
-        handler.removeCallbacks(flashNoPressureSignTask);
-        if (enabled) {
-            handler.post(flashNoPressureSignTask);
+        if (noPressureSignStatus != enabled) {
+            handler.removeCallbacks(flashNoPressureSignTask);
+            if (enabled) {
+                handler.post(flashNoPressureSignTask);
+            } else {
+                tvNoPressure.setVisibility(View.GONE);
+            }
+            noPressureSignStatus = enabled;
         }
     }
     
     public void setServiceDoorOpenStatus(boolean enabled) {
-        handler.removeCallbacks(flashServiceDoorOpenTask);
-        if (enabled) {
-            handler.post(flashServiceDoorOpenTask);
+        if (serviceDoorSignStatus != enabled) {
+            handler.removeCallbacks(flashServiceDoorOpenTask);
+            if (enabled) {
+                handler.post(flashServiceDoorOpenTask);
+            } else {
+                tvServiceDoorOpen.setVisibility(View.GONE);
+            }
+            serviceDoorSignStatus = enabled;
         }
     }
     

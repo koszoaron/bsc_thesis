@@ -3,6 +3,7 @@ package com.github.koszoaron.maguscada;
 import com.github.koszoaron.maguscada.callback.OnFrequencyChangedListener;
 import com.github.koszoaron.maguscada.communication.PlcConnection;
 import com.github.koszoaron.maguscada.communication.PlcConstants;
+import com.github.koszoaron.maguscada.communication.PlcConstants.Semaphore;
 import com.github.koszoaron.maguscada.communication.StatusBits;
 import com.github.koszoaron.maguscada.fragment.BaseDialogFragment;
 import com.github.koszoaron.maguscada.fragment.BaseFragment;
@@ -11,6 +12,8 @@ import com.github.koszoaron.maguscada.fragment.MeasurementDialogFragment;
 import com.github.koszoaron.maguscada.fragment.ScadaFragment;
 import com.github.koszoaron.maguscada.util.Constants;
 import com.github.koszoaron.maguscada.util.Constants.Motor;
+import com.github.koszoaron.maguscada.util.Constants.SemaphoreLight;
+import com.github.koszoaron.maguscada.util.Constants.SemaphoreState;
 import com.github.koszoaron.maguscada.util.Logger;
 import com.github.koszoaron.maguscada.util.Utility;
 import com.github.koszoaron.maguscada.util.Constants.MeasureSetting;
@@ -39,12 +42,8 @@ public class ScadaActivity extends Activity implements OnFrequencyChangedListene
     private Runnable checkStatusBitsTask = new Runnable() {
         @Override
         public void run() {
-            int status = connection.getStatus();
-            if (status != -1) {
-                StatusBits sb = new StatusBits(status);
-                dlog.v(sb.toString());
-                //TODO update UI: congestion, track stopped, etc
-            }
+            new GetStatusTask().execute();
+            new GetSemaphoreStatusTask().execute();
             
             handler.postDelayed(this, CHECK_STATUS_BITS_REPEAT_DELAY);
         }
@@ -164,6 +163,11 @@ public class ScadaActivity extends Activity implements OnFrequencyChangedListene
     public void toggleYellowLight() {
         yellowLightOn = !yellowLightOn;
         new ToggleYellowWarningTask().execute(yellowLightOn);
+    }
+    
+    public void toggleTrackPosition() {
+        getScadaFragment().logToConsole("Toggle track position");
+        new ToggleTrackPositionTask().execute();
     }
     
     public boolean isMeasuring() {
@@ -578,7 +582,7 @@ public class ScadaActivity extends Activity implements OnFrequencyChangedListene
     private class StopCalibrationTask extends GenericAsyncTask {
         @Override
         protected Boolean doInBackground(Object... params) {
-            if (connection.calibrationStopWait()) {
+            if (connection.calibrationStop()) {
                 publishProgress(1);
                 if (connection.calibrationStopWait()) {
                     return true;
@@ -700,6 +704,96 @@ public class ScadaActivity extends Activity implements OnFrequencyChangedListene
                 }
             }
         }
-    }   
+    } 
+    
+    private class GetStatusTask extends AsyncTask<Void, Void, Integer> {
+        @Override
+        protected Integer doInBackground(Void... params) {
+            return connection.getStatus();            
+        }
+        
+        @Override
+        protected void onPostExecute(Integer result) {
+            if (result != -1) {
+                StatusBits sb = new StatusBits(result);
+                dlog.v(sb.toString());
+                
+                getScadaFragment().setServiceDoorOpenStatus(sb.isServiceDoorOpen());
+                getScadaFragment().setNoPressureStatus(sb.isNoPressure());
+                getScadaFragment().setServoProblemStatus(sb.isServoProblem());
+                getScadaFragment().setCongestion1Status(sb.isCongestion1());
+                getScadaFragment().setCongestion2Status(sb.isCongestion2());
+                getScadaFragment().setCongestion2Status(sb.isCongestionSensorCurtain());
+            }
+        }
+    }
+    
+    private class GetSemaphoreStatusTask extends AsyncTask<Void, Void, Integer> {
+        @Override
+        protected Integer doInBackground(Void... params) {
+            return connection.getSemaphoreStatus();
+        }
+        
+        @Override
+        protected void onPostExecute(Integer result) {
+            if (result != -1) {
+                if ((result & Semaphore.RED.getValue()) > 0) {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.RED, SemaphoreState.ON);
+                } else {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.RED, SemaphoreState.OFF);
+                }
+            }
+            
+            if (result != -1) {
+                if ((result & Semaphore.YELLOW.getValue()) > 0) {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.ON);
+                } else {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.YELLOW, SemaphoreState.OFF);
+                }
+            }
+            
+            if (result != -1) {
+                if ((result & Semaphore.GREEN.getValue()) > 0) {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.ON);
+                } else {
+                    getScadaFragment().setSemaphoreState(SemaphoreLight.GREEN, SemaphoreState.OFF);
+                }
+            }
+        }
+    }
+    
+    private class ToggleTrackPositionTask extends GenericAsyncTask {
+        @Override
+        protected Boolean doInBackground(Object... params) {
+            return connection.toggleTrackPosition();
+        }
+        
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            
+            if (result) {
+                if (isCalibrating()) {
+                    getScadaFragment().setButtonsForCalibration();
+                } else if (isCleaning()) {
+                    getScadaFragment().setButtonsForCleaning();
+                } else if (isMeasuring()) {
+                    getScadaFragment().setButtonsForMeasurement();
+                }
+            }
+        }
+    }
+    
+    private class GetTrackPositionTask extends AsyncTask<Void, Void, Integer> {
+        @Override
+        protected Integer doInBackground(Void... params) {
+            return connection.getTrackPosition();
+        }
+        
+        @Override
+        protected void onPostExecute(Integer result) {
+            //TODO update track display
+        }
+    }
     
 }
